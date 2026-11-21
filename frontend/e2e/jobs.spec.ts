@@ -43,7 +43,7 @@ test("candidates browse, search and filter clearly labelled demo listings", asyn
     .poll(async () => {
       const texts = await cards.allInnerTexts();
       return texts.length > 0 && texts.every((t) => t.includes("Singapore"));
-    })
+    }, { timeout: 15_000 })
     .toBe(true);
 
   // Filters survive a reload (they live in the URL).

@@ -75,6 +75,28 @@ public class JobService {
     return mapper.detail(job);
   }
 
+  /** All published, unexpired jobs (skills initialized), for matching. */
+  @Transactional(readOnly = true)
+  public List<Job> visibleJobs() {
+    List<Job> all = jobs.findAll(JobSpecifications.visibleOn(today()), NEWEST);
+    all.forEach(j -> j.getSkills().size());
+    return all;
+  }
+
+  /** A published, unexpired job (skills initialized), for matching. */
+  @Transactional(readOnly = true)
+  public Job visibleJob(UUID id) {
+    Job job =
+        jobs.findOne(JobSpecifications.all(JobSpecifications.equal("id", id), JobSpecifications.visibleOn(today())))
+            .orElseThrow(JobService::notFound);
+    job.getSkills().size();
+    return job;
+  }
+
+  public JobSummary summarize(Job job) {
+    return mapper.summary(job);
+  }
+
   // ---------------------------------------------------------------- admin
 
   @Transactional(readOnly = true)

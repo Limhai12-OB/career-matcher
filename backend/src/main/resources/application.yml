@@ -93,6 +93,9 @@ app:
       period: 1h
     refresh-per-ip: { capacity: 60, period: 1m }
     sensitive-account-action-per-user: { capacity: 5, period: 15m }
+    match-explanation-per-user:
+      capacity: ${RATE_LIMIT_EXPLANATIONS_PER_HOUR:30}
+      period: 1h
     cv-upload-per-user:
       capacity: ${RATE_LIMIT_CV_UPLOADS_PER_HOUR:10}
       period: 1h
@@ -108,6 +111,14 @@ app:
     # Creates the first ADMIN account on startup if it does not exist (see AdminBootstrap).
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}
+  matching:
+    # Component weights of the match score; must sum to 1.0 (validated at startup).
+    weights:
+      skills: ${MATCH_WEIGHT_SKILLS:0.45}
+      experience: ${MATCH_WEIGHT_EXPERIENCE:0.20}
+      projects: ${MATCH_WEIGHT_PROJECTS:0.15}
+      education: ${MATCH_WEIGHT_EDUCATION:0.10}
+      preferences: ${MATCH_WEIGHT_PREFERENCES:0.10}
   jobs:
     # Loads the bundled DEMO job listings (fictional; example.com links). Keep false in production.
     demo-data-enabled: ${JOBS_DEMO_DATA_ENABLED:false}

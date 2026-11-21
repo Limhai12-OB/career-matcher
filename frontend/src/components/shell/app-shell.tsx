@@ -6,6 +6,7 @@ import {
   FileText,
   ShieldCheck,
   LayoutDashboard,
+  Sparkles,
   Menu,
   Settings,
   SlidersHorizontal,
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 
 export const CANDIDATE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/matches", label: "Recommendations", icon: Sparkles },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/cv", label: "CV analysis", icon: FileText },
   { href: "/skills", label: "My skills", icon: BadgeCheck },
@@ -73,7 +75,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <p className="px-5 py-4 text-xs text-sidebar-foreground/50">
-          {user?.role === "ADMIN" ? "Administrator" : "Personalized job matching is coming soon."}
+          {user?.role === "ADMIN" ? "Administrator" : "Scores are calculated, not guessed."}
         </p>
       </aside>
 

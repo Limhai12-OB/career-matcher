@@ -1,6 +1,9 @@
 import { apiRequest } from "@/lib/auth/session";
 
 import type {
+  MatchDetail,
+  MatchExplanation,
+  Recommendations,
   CatalogSkill,
   JobDetail,
   JobPayload,
@@ -106,4 +109,14 @@ export const adminJobsApi = {
 
 export const catalogApi = {
   all: () => apiRequest<CatalogSkill[]>("/api/v1/skills"),
+};
+
+export const matchesApi = {
+  recommendations: (params: URLSearchParams) =>
+    apiRequest<Recommendations>(`/api/v1/me/matches?${params.toString()}`),
+  detail: (jobId: string) => apiRequest<MatchDetail>(`/api/v1/me/matches/${encodeURIComponent(jobId)}`),
+  explain: (jobId: string) =>
+    apiRequest<MatchExplanation>(`/api/v1/me/matches/${encodeURIComponent(jobId)}/explanation`, {
+      method: "POST",
+    }),
 };

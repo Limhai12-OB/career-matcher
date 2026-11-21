@@ -230,6 +230,16 @@ public class CvService {
     }
   }
 
+  /** Latest completed analysis of the user, for matching (validated content + warnings). */
+  public record CompletedAnalysis(UUID analysisId, AnalysisContent content, List<String> warnings) {}
+
+  @Transactional(readOnly = true)
+  public java.util.Optional<CompletedAnalysis> latestCompleted(UUID userId) {
+    return analyses
+        .findFirstByUserIdAndStatusOrderByCompletedAtDesc(userId, AnalysisStatus.COMPLETED)
+        .map(a -> new CompletedAnalysis(a.getId(), json.readValue(a.getResult(), AnalysisContent.class), a.getWarnings()));
+  }
+
   // ------------------------------------------------------------------ confirm skills
 
   /**

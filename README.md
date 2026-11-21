@@ -4,9 +4,9 @@ AI-powered career guidance for university students, fresh graduates and entry-le
 It analyzes CVs, extracts skills, recommends entry-level IT jobs with deterministic compatibility
 scores, and explains skill gaps.
 
-> **Status:** Milestones 1-4 are complete. Candidates can register, onboard, manage their profile,
-> analyze their CV and confirm skills, and search entry-level IT jobs. Admins manage job listings.
-> Job matching arrives in later milestones; see
+> **Status:** Milestones 1-5 are complete. Candidates can register, onboard, analyze their CV and
+> confirm skills, search jobs, and get personalized recommendations with transparent, deterministic
+> compatibility scores and grounded explanations. Admins manage job listings. See
 > [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
@@ -43,6 +43,7 @@ backend/        Spring Boot app (Maven wrapper; no global Maven needed)
     skill/      canonical skill catalog, normalizer, candidate (confirmed) skills
     cv/         CV upload, async analysis worker, history, confirmation, deletion
     job/        job listings: search/filter/pagination, admin CRUD, demo dataset seeder
+    matching/   deterministic scoring engine (engine/), versioned results, explanations
     storage/    S3 client with AES-256-GCM client-side encryption
     aiclient/   typed client + health indicator for the AI service
   src/main/resources/db/migration/   Flyway migrations (V{n}__{description}.sql)
@@ -166,6 +167,9 @@ array, `INVALID_CREDENTIALS`, `EMAIL_ALREADY_REGISTERED`, `ONBOARDING_INCOMPLETE
 | GET/POST | `/api/v1/admin/jobs` | admin | List all jobs (`q`, `status`, `origin`) / create a draft |
 | GET/PUT/DELETE | `/api/v1/admin/jobs/{id}` | admin | Read / replace / delete a job |
 | PATCH | `/api/v1/admin/jobs/{id}/status` | admin | `PUBLISHED`, `CLOSED`, or `DRAFT` (only if never published) |
+| GET | `/api/v1/me/matches` | candidate | Recommendations, best first (`origin`, `page`, `size` ≤ 50) with data-completeness flags |
+| GET | `/api/v1/me/matches/{jobId}` | candidate | Full breakdown for one published job (plus cached explanation) |
+| POST | `/api/v1/me/matches/{jobId}/explanation` | candidate | Generate or return the grounded explanation of the current result |
 | DELETE | `/api/v1/me/skills/{skillId}` | bearer | Remove a skill from my profile |
 
 ## Jobs
@@ -201,6 +205,46 @@ opportunities as real.
 - The first admin is created at startup from `ADMIN_EMAIL` / `ADMIN_PASSWORD` if that e-mail doesn't exist yet. Existing accounts are never promoted; the password needs 12+ characters with a letter and a digit. Change it after the first sign-in and remove it from `.env`.
 - Admins see **Manage jobs** (`/admin/jobs`): search and filter by status and origin, create (saved as `DRAFT`), edit, publish, close, delete. A published job can't go back to draft. Admins have no candidate profile and are kept out of candidate pages; candidates are kept out of `/admin`, and every `/api/v1/admin/**` call requires `ROLE_ADMIN`.
 - Validation: https URLs only; source required; ISO country and currency; salary min ≤ max with currency and period; experience min ≤ max; posting date not in the future; expiry not before posting; 1-30 unique catalog skills with at least one required; plain-text description (50-20,000 chars, never rendered as HTML).
+
+## Job matching
+
+Scores are calculated by a pure, deterministic function (`matching/engine/MatchingEngine`, algorithm
+**`match-v1`**) from stored data only: confirmed skills, the latest completed CV analysis
+(experience, projects, education), and profile and preferences. No AI is involved in scoring.
+
+| Component | Weight | Rule (each scores 0-1) |
+|---|---|---|
+| Technical skills | 45% | 0.75 × required coverage + 0.25 × preferred coverage (required only if the job has no preferred skills). No confirmed skills → missing. |
+| Experience | 20% | No job minimum → full credit. Otherwise merged months of dated CV experience ÷ minimum, capped at 1; 0.9 if more than 24 months above the job's maximum. Undated roles aren't counted (and are flagged). |
+| Project relevance | 15% | Job skills used in CV projects ÷ min(3, number of job skills), capped at 1. |
+| Education | 10% | No requirement → full credit. Completed level ≥ required → 1, one level below → 0.5, otherwise 0; an ongoing degree at the required level → 0.8. A field outside the job's fields → × 0.8. |
+| Candidate preferences | 10% | Average of the stated preferences only: employment type, work arrangement (partial 0.5), location (relocation 0.7), salary (same currency only, yearly ÷ 12), role keywords. None stated → neutral 0.5. |
+
+**Missing data is explicit.** Each component reports `SCORED`, `NOT_REQUIRED` or
+`MISSING_CANDIDATE_DATA`, with factors (codes, skill names and the exact numbers used). Missing
+candidate data scores 0 (preferences: neutral 0.5) and is listed in `missingData`. The UI shows which
+information is missing and how to add it; basic-mode CV extraction marks experience and projects as
+unknown, not as "none".
+
+**Weights** come from `app.matching.weights.*` (`MATCH_WEIGHT_*` env vars) and must each be in
+[0,1] and sum to 1.0, or the backend refuses to start.
+
+**Versioning.** Each result is stored in `job_matches` with the algorithm version, a weights
+snapshot, the full breakdown, the CV analysis used, and a SHA-256 of the result. A new row is
+written only when the result changes, so history is preserved and identical recalculations are
+free. Any rule change must bump `MatchingEngine.VERSION`.
+
+**Explanations.** `POST /api/v1/me/matches/{jobId}/explanation` sends the AI service only the
+calculated breakdown and public job fields (title, company, type). No CV text or personal data is
+sent. Claude (or, in `local` mode, a deterministic template labelled "no AI") returns a summary,
+strengths, gaps and next steps. Both the AI service and the backend reject an explanation that
+cites a skill not in the factors, a number not in the facts (either integer rounding of the total
+is allowed), or links or markup. Valid explanations are cached per result version, rate limited
+(30/hour per user), and failures never affect the score.
+
+**Authorization.** Matching endpoints are under `/api/v1/me/matches/**` and require the CANDIDATE
+role. Results are computed for and stored against the authenticated user only, and only for
+published, unexpired jobs.
 
 ## CV analysis pipeline
 
@@ -317,6 +361,8 @@ required secret is missing.
 | `AI_PROVIDER`, `ANTHROPIC_API_KEY`, `AI_MODEL`, `AI_EFFORT` | ai-service | LLM provider configuration (see "AI provider") |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | backend | Bootstrap the first administrator (see "Administration") |
 | `JOBS_DEMO_DATA_ENABLED` | backend | Load the labelled demo job dataset (default `false`) |
+| `MATCH_WEIGHT_SKILLS` … `MATCH_WEIGHT_PREFERENCES` | backend | Matching weights (defaults 0.45/0.20/0.15/0.10/0.10; must sum to 1) |
+| `RATE_LIMIT_EXPLANATIONS_PER_HOUR` | backend | Explanation requests per user (default 30) |
 | `CORS_ALLOWED_ORIGINS` | backend | Comma-separated browser origins |
 | `OPENAPI_ENABLED` | backend | Toggle Swagger UI / OpenAPI |
 | `AI_DOCS_ENABLED` | ai-service | Toggle FastAPI docs |

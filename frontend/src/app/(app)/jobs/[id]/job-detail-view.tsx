@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { OriginBadge } from "@/components/jobs/origin-badge";
+import { CompatibilityCard } from "@/components/matching/compatibility-card";
 import { ErrorState, PageLoading } from "@/components/states/states";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,8 @@ function JobBody({ job }: { job: JobDetail }) {
             </AlertDescription>
           </Alert>
         )}
+
+        {isCandidate && <CompatibilityCard jobId={job.id} />}
 
         <Card>
           <CardHeader>

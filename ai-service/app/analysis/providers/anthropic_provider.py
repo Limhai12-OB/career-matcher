@@ -11,6 +11,8 @@ from app.analysis.prompt import SYSTEM_PROMPT, build_user_message
 from app.analysis.providers.base import ProviderError, ProviderErrorCode, ProviderResult
 from app.analysis.schemas import CvExtraction
 from app.config import Settings
+from app.explain import prompt as explain_prompt
+from app.explain.schemas import ExplanationOut, MatchFacts
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +42,40 @@ class AnthropicProvider:
 
     async def extract(self, cv_text: str) -> ProviderResult:
         s = self._settings
+        response = await self._parse(
+            system=SYSTEM_PROMPT,
+            user=build_user_message(cv_text),
+            output_format=CvExtraction,
+            effort=s.effort,
+        )
+        parsed = response.parsed_output
+        if not isinstance(parsed, CvExtraction):
+            raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "no parsed output")
+        return ProviderResult(extraction=parsed, model=response.model)
+
+    async def explain(self, facts: MatchFacts) -> tuple[ExplanationOut, str]:
+        from app.explain.service import facts_json
+
+        response = await self._parse(
+            system=explain_prompt.SYSTEM_PROMPT,
+            user=explain_prompt.build_user_message(facts_json(facts)),
+            output_format=ExplanationOut,
+            effort="low",
+        )
+        parsed = response.parsed_output
+        if not isinstance(parsed, ExplanationOut):
+            raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "no parsed output")
+        return parsed, response.model
+
+    async def _parse(self, *, system: str, user: str, output_format: type, effort: str):
+        s = self._settings
         kwargs: dict = {
             "model": s.model,
             "max_tokens": 16000,
-            "system": SYSTEM_PROMPT,
-            "messages": [{"role": "user", "content": build_user_message(cv_text)}],
-            "output_format": CvExtraction,
-            "output_config": {"effort": s.effort},
+            "system": system,
+            "messages": [{"role": "user", "content": user}],
+            "output_format": output_format,
+            "output_config": {"effort": effort},
         }
         if s.fallbacks_enabled:
             # On a safety decline the API re-runs the request on a fallback model server-side.
@@ -86,7 +115,4 @@ class AnthropicProvider:
             raise ProviderError(ProviderErrorCode.AI_REFUSED)
         if response.stop_reason == "max_tokens":
             raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "truncated")
-        parsed = response.parsed_output
-        if not isinstance(parsed, CvExtraction):
-            raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "no parsed output")
-        return ProviderResult(extraction=parsed, model=response.model)
+        return response

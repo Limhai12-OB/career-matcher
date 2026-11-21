@@ -271,3 +271,78 @@ export interface CatalogSkill {
   name: string;
   category: SkillCategory;
 }
+
+// ---- Matching ----
+
+export type MatchComponent = "SKILLS" | "EXPERIENCE" | "PROJECTS" | "EDUCATION" | "PREFERENCES";
+export type ComponentStatus = "SCORED" | "MISSING_CANDIDATE_DATA" | "NOT_REQUIRED";
+
+export interface MatchFactor {
+  code: string;
+  skills: string[];
+  values: Record<string, string | number>;
+}
+
+export interface ComponentScore {
+  component: MatchComponent;
+  status: ComponentStatus;
+  score: number;
+  weight: number;
+  contribution: number;
+  factors: MatchFactor[];
+}
+
+export interface MatchResult {
+  algorithmVersion: string;
+  totalScore: number;
+  weights: Record<MatchComponent, number>;
+  components: ComponentScore[];
+  missingData: string[];
+}
+
+export interface CandidateDataStatus {
+  hasConfirmedSkills: boolean;
+  hasCvAnalysis: boolean;
+  cvExtractionLimited: boolean;
+  hasPreferences: boolean;
+}
+
+export interface MatchSummary {
+  job: JobSummary;
+  totalScore: number;
+  algorithmVersion: string;
+  components: Omit<ComponentScore, "factors">[];
+  missingRequiredSkills: string[];
+  requiredSkillCount: number;
+  matchedRequiredSkillCount: number;
+}
+
+export interface Recommendations {
+  content: MatchSummary[];
+  page: { number: number; size: number; totalElements: number; totalPages: number };
+  candidateData: CandidateDataStatus;
+}
+
+export interface ExplanationPoint {
+  text: string;
+  skills: string[];
+}
+
+export interface MatchExplanation {
+  provider: string;
+  model: string;
+  summary: string;
+  strengths: ExplanationPoint[];
+  gaps: ExplanationPoint[];
+  nextSteps: ExplanationPoint[];
+  createdAt: string;
+}
+
+export interface MatchDetail {
+  resultId: string;
+  job: JobSummary;
+  result: MatchResult;
+  computedAt: string;
+  candidateData: CandidateDataStatus;
+  explanation: MatchExplanation | null;
+}
