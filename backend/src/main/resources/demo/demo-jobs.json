@@ -1,0 +1,663 @@
+{
+  "notice": "DEMONSTRATION DATA. Fictional companies and listings for development and demos only. Not real job openings; application links point to reserved example.com domains.",
+  "sourceName": "AI Career Matcher demo dataset",
+  "sourceUrl": "https://example.com/ai-career-matcher/demo-dataset",
+  "jobs": [
+    {
+      "slug": "junior-java-backend",
+      "title": "Junior Java Backend Developer",
+      "companyName": "Mekong Bytes (Demo)",
+      "city": "Phnom Penh",
+      "countryCode": "KH",
+      "remoteType": "HYBRID",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 6,
+      "maxExperienceMonths": 24,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Computer Science",
+        "Software Engineering",
+        "Information Technology"
+      ],
+      "salaryMin": 800,
+      "salaryMax": 1200,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "java",
+        "spring-boot",
+        "sql",
+        "rest-apis"
+      ],
+      "preferredSkills": [
+        "postgresql",
+        "docker",
+        "git",
+        "unit-testing"
+      ],
+      "postedDaysAgo": 2,
+      "description": "About the team\nOur backend team builds payment and booking APIs used by small businesses across the region.\n\nWhat you'll do\n- Build and maintain REST APIs in Java and Spring Boot\n- Write SQL queries and database migrations\n- Write unit tests and take part in code reviews\n\nWhat we're looking for\n- Solid Java fundamentals and object-oriented programming\n- Basic Spring Boot experience from work, internships or projects\n- Comfortable with SQL\n\nNice to have\n- PostgreSQL\n- Docker\n- Git workflows\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "frontend-intern-react",
+      "title": "Frontend Developer Intern (React)",
+      "companyName": "Lotus Cloud Systems (Demo)",
+      "city": "Phnom Penh",
+      "countryCode": "KH",
+      "remoteType": "ONSITE",
+      "employmentType": "INTERNSHIP",
+      "seniority": "INTERNSHIP",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 12,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 300,
+      "salaryMax": 400,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "javascript",
+        "react",
+        "html",
+        "css"
+      ],
+      "preferredSkills": [
+        "typescript",
+        "git",
+        "figma"
+      ],
+      "postedDaysAgo": 1,
+      "description": "About the team\nA product team building dashboards for logistics companies.\n\nWhat you'll do\n- Build React components from Figma designs\n- Fix UI bugs and improve accessibility\n- Pair with senior engineers on new features\n\nWhat we're looking for\n- HTML, CSS and JavaScript\n- Some experience with React\n- Eagerness to learn\n\nNice to have\n- TypeScript\n- Git\n- Figma\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "qa-engineer-junior",
+      "title": "Junior QA Engineer",
+      "companyName": "Angkor Test Labs (Demo)",
+      "city": "Siem Reap",
+      "countryCode": "KH",
+      "remoteType": "HYBRID",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 24,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Computer Science",
+        "Software Engineering",
+        "Information Technology"
+      ],
+      "salaryMin": 600,
+      "salaryMax": 900,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "unit-testing",
+        "selenium",
+        "sql"
+      ],
+      "preferredSkills": [
+        "cypress",
+        "jira",
+        "agile",
+        "postman"
+      ],
+      "postedDaysAgo": 5,
+      "description": "About the team\nWe test web and mobile apps for clients in tourism and retail.\n\nWhat you'll do\n- Write and run manual and automated test cases\n- Report and track bugs in Jira\n- Work with developers to reproduce issues\n\nWhat we're looking for\n- Understanding of software testing concepts\n- Basic Selenium or another automation tool\n- Basic SQL\n\nNice to have\n- Cypress\n- Postman\n- Agile teams\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "data-analyst-graduate",
+      "title": "Graduate Data Analyst",
+      "companyName": "Riverbank Analytics (Demo)",
+      "city": "Singapore",
+      "countryCode": "SG",
+      "remoteType": "HYBRID",
+      "employmentType": "FULL_TIME",
+      "seniority": "ENTRY",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 12,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Statistics",
+        "Mathematics",
+        "Computer Science"
+      ],
+      "salaryMin": 3800,
+      "salaryMax": 4500,
+      "salaryCurrency": "SGD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "sql",
+        "python",
+        "data-analysis"
+      ],
+      "preferredSkills": [
+        "pandas",
+        "power-bi",
+        "microsoft-excel",
+        "communication"
+      ],
+      "postedDaysAgo": 3,
+      "description": "About the team\nThe analytics team turns operational data into weekly insights for retail clients.\n\nWhat you'll do\n- Clean and analyse data with SQL and Python\n- Build dashboards and reports\n- Present findings to non-technical stakeholders\n\nWhat we're looking for\n- SQL and Python for data analysis\n- Good communication skills\n- Degree in a quantitative field\n\nNice to have\n- Pandas\n- Power BI\n- Excel\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "devops-intern",
+      "title": "DevOps Intern",
+      "companyName": "Lion City Infra (Demo)",
+      "city": "Singapore",
+      "countryCode": "SG",
+      "remoteType": "ONSITE",
+      "employmentType": "INTERNSHIP",
+      "seniority": "INTERNSHIP",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 6,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 1200,
+      "salaryMax": 1500,
+      "salaryCurrency": "SGD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "linux",
+        "docker",
+        "git"
+      ],
+      "preferredSkills": [
+        "kubernetes",
+        "ci-cd",
+        "github-actions",
+        "amazon-web-services",
+        "bash"
+      ],
+      "postedDaysAgo": 6,
+      "description": "About the team\nWe run the cloud platform for a group of fintech start-ups.\n\nWhat you'll do\n- Help maintain CI/CD pipelines\n- Containerise services with Docker\n- Monitor systems and document runbooks\n\nWhat we're looking for\n- Comfortable on the Linux command line\n- Basic Docker knowledge\n- Git\n\nNice to have\n- Kubernetes\n- GitHub Actions\n- AWS\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "fullstack-junior-node",
+      "title": "Junior Full-Stack Developer (Node.js)",
+      "companyName": "Chao Phraya Digital (Demo)",
+      "city": "Bangkok",
+      "countryCode": "TH",
+      "remoteType": "HYBRID",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 6,
+      "maxExperienceMonths": 24,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Computer Science",
+        "Software Engineering",
+        "Information Technology"
+      ],
+      "salaryMin": 30000,
+      "salaryMax": 45000,
+      "salaryCurrency": "THB",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "javascript",
+        "node-js",
+        "react",
+        "mongodb"
+      ],
+      "preferredSkills": [
+        "typescript",
+        "express",
+        "docker",
+        "rest-apis"
+      ],
+      "postedDaysAgo": 4,
+      "description": "About the team\nWe build e-commerce storefronts and back-office tools for regional brands.\n\nWhat you'll do\n- Develop features across a Node.js API and React frontend\n- Model data in MongoDB\n- Deploy and monitor services\n\nWhat we're looking for\n- JavaScript on both frontend and backend\n- Node.js and React project experience\n- MongoDB basics\n\nNice to have\n- TypeScript\n- Express\n- Docker\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "mobile-flutter-junior",
+      "title": "Junior Mobile Developer (Flutter)",
+      "companyName": "Saigon Apps Studio (Demo)",
+      "city": "Ho Chi Minh City",
+      "countryCode": "VN",
+      "remoteType": "ONSITE",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 24,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 15000000,
+      "salaryMax": 22000000,
+      "salaryCurrency": "VND",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "flutter",
+        "dart",
+        "git"
+      ],
+      "preferredSkills": [
+        "firebase",
+        "rest-apis",
+        "android",
+        "ios"
+      ],
+      "postedDaysAgo": 8,
+      "description": "About the team\nA mobile studio building consumer apps for food delivery and education.\n\nWhat you'll do\n- Build cross-platform screens in Flutter\n- Integrate REST APIs\n- Publish builds to test channels\n\nWhat we're looking for\n- Dart and Flutter basics\n- At least one published or portfolio app\n- Git\n\nNice to have\n- Firebase\n- Native Android or iOS knowledge\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "it-support-specialist",
+      "title": "IT Support Specialist",
+      "companyName": "Klang Valley Services (Demo)",
+      "city": "Kuala Lumpur",
+      "countryCode": "MY",
+      "remoteType": "ONSITE",
+      "employmentType": "FULL_TIME",
+      "seniority": "ENTRY",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 12,
+      "educationLevel": "VOCATIONAL",
+      "educationFields": [
+        "Information Technology"
+      ],
+      "salaryMin": 3000,
+      "salaryMax": 3800,
+      "salaryCurrency": "MYR",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "networking",
+        "linux",
+        "communication"
+      ],
+      "preferredSkills": [
+        "problem-solving",
+        "microsoft-azure",
+        "bash"
+      ],
+      "postedDaysAgo": 9,
+      "description": "About the team\nWe support 400 employees across three offices.\n\nWhat you'll do\n- Resolve hardware, software and network issues\n- Set up laptops and user accounts\n- Document fixes in the knowledge base\n\nWhat we're looking for\n- Basic networking (TCP/IP, DNS, Wi-Fi)\n- Windows and Linux familiarity\n- Friendly communication\n\nNice to have\n- Azure AD\n- Scripting with Bash or PowerShell\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "python-backend-graduate",
+      "title": "Graduate Python Backend Engineer",
+      "companyName": "Manila Bay Tech (Demo)",
+      "city": "Manila",
+      "countryCode": "PH",
+      "remoteType": "REMOTE",
+      "employmentType": "FULL_TIME",
+      "seniority": "ENTRY",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 12,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Computer Science",
+        "Software Engineering",
+        "Information Technology"
+      ],
+      "salaryMin": 40000,
+      "salaryMax": 55000,
+      "salaryCurrency": "PHP",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "python",
+        "fastapi",
+        "sql",
+        "rest-apis"
+      ],
+      "preferredSkills": [
+        "postgresql",
+        "docker",
+        "unit-testing",
+        "git"
+      ],
+      "postedDaysAgo": 3,
+      "description": "About the team\nA remote-first team building APIs for healthcare scheduling.\n\nWhat you'll do\n- Implement API endpoints in Python and FastAPI\n- Write tests and documentation\n- Improve query performance\n\nWhat we're looking for\n- Python fundamentals\n- Experience building an API in a project or internship\n- SQL\n\nNice to have\n- PostgreSQL\n- Docker\n- pytest\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "ux-ui-junior",
+      "title": "Junior UI/UX Designer",
+      "companyName": "Lotus Cloud Systems (Demo)",
+      "city": "Phnom Penh",
+      "countryCode": "KH",
+      "remoteType": "HYBRID",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 24,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 500,
+      "salaryMax": 800,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "figma",
+        "ui-ux-design"
+      ],
+      "preferredSkills": [
+        "responsive-web-design",
+        "html",
+        "css",
+        "communication"
+      ],
+      "postedDaysAgo": 12,
+      "description": "About the team\nDesign for internal tools and a customer-facing mobile app.\n\nWhat you'll do\n- Create wireframes and prototypes in Figma\n- Run simple usability tests\n- Work with developers on implementation details\n\nWhat we're looking for\n- A portfolio with UI/UX work\n- Figma\n\nNice to have\n- Responsive design\n- HTML and CSS basics\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "dotnet-junior",
+      "title": "Junior .NET Developer",
+      "companyName": "Danube Software (Demo)",
+      "city": "Berlin",
+      "countryCode": "DE",
+      "remoteType": "HYBRID",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 6,
+      "maxExperienceMonths": 24,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Computer Science",
+        "Software Engineering",
+        "Information Technology"
+      ],
+      "salaryMin": 48000,
+      "salaryMax": 56000,
+      "salaryCurrency": "EUR",
+      "salaryPeriod": "YEAR",
+      "requiredSkills": [
+        "csharp",
+        "net",
+        "sql"
+      ],
+      "preferredSkills": [
+        "microsoft-azure",
+        "microsoft-sql-server",
+        "git",
+        "agile"
+      ],
+      "postedDaysAgo": 7,
+      "description": "About the team\nWe build insurance back-office software in C# and .NET.\n\nWhat you'll do\n- Develop features in C# and ASP.NET Core\n- Write SQL against SQL Server\n- Participate in sprint planning\n\nWhat we're looking for\n- C# and .NET fundamentals\n- SQL\n\nNice to have\n- Azure\n- SQL Server\n- Scrum or Kanban teams\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "data-engineering-intern",
+      "title": "Data Engineering Intern",
+      "companyName": "Riverbank Analytics (Demo)",
+      "city": "Singapore",
+      "countryCode": "SG",
+      "remoteType": "HYBRID",
+      "employmentType": "INTERNSHIP",
+      "seniority": "INTERNSHIP",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 6,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 1500,
+      "salaryMax": 1800,
+      "salaryCurrency": "SGD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "python",
+        "sql"
+      ],
+      "preferredSkills": [
+        "pandas",
+        "google-cloud-platform",
+        "docker",
+        "git"
+      ],
+      "postedDaysAgo": 10,
+      "description": "About the team\nHelp build the pipelines that feed our analytics warehouse.\n\nWhat you'll do\n- Write Python jobs that load and validate data\n- Write and optimise SQL transformations\n- Add monitoring to pipelines\n\nWhat we're looking for\n- Python and SQL\n\nNice to have\n- Pandas\n- Google Cloud\n- Docker\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "junior-android",
+      "title": "Junior Android Developer",
+      "companyName": "Saigon Apps Studio (Demo)",
+      "city": "Hanoi",
+      "countryCode": "VN",
+      "remoteType": "ONSITE",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 6,
+      "maxExperienceMonths": 24,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 14000000,
+      "salaryMax": 20000000,
+      "salaryCurrency": "VND",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "kotlin",
+        "android"
+      ],
+      "preferredSkills": [
+        "java",
+        "rest-apis",
+        "git",
+        "unit-testing"
+      ],
+      "postedDaysAgo": 14,
+      "description": "About the team\nNative Android development for a popular learning app.\n\nWhat you'll do\n- Build features in Kotlin\n- Fix crashes and improve performance\n- Write unit tests\n\nWhat we're looking for\n- Kotlin and Android SDK basics\n- A portfolio app or internship\n\nNice to have\n- Java\n- REST APIs\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "cloud-support-associate",
+      "title": "Cloud Support Associate",
+      "companyName": "Lion City Infra (Demo)",
+      "city": "",
+      "countryCode": "SG",
+      "remoteType": "REMOTE",
+      "employmentType": "CONTRACT",
+      "seniority": "ENTRY",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 12,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 3500,
+      "salaryMax": 4200,
+      "salaryCurrency": "SGD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "amazon-web-services",
+        "linux",
+        "networking"
+      ],
+      "preferredSkills": [
+        "terraform",
+        "bash",
+        "docker"
+      ],
+      "postedDaysAgo": 11,
+      "description": "About the team\nA 12-month contract supporting customers on our managed AWS platform.\n\nWhat you'll do\n- Troubleshoot customer infrastructure issues\n- Automate common fixes\n- Escalate and document incidents\n\nWhat we're looking for\n- AWS fundamentals\n- Linux and networking basics\n\nNice to have\n- Terraform\n- Bash scripting\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "junior-php-laravel",
+      "title": "Junior PHP Developer (Laravel)",
+      "companyName": "Chao Phraya Digital (Demo)",
+      "city": "Chiang Mai",
+      "countryCode": "TH",
+      "remoteType": "REMOTE",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 6,
+      "maxExperienceMonths": 24,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 25000,
+      "salaryMax": 35000,
+      "salaryCurrency": "THB",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "php",
+        "laravel",
+        "mysql"
+      ],
+      "preferredSkills": [
+        "javascript",
+        "vue-js",
+        "git",
+        "rest-apis"
+      ],
+      "postedDaysAgo": 15,
+      "description": "About the team\nMaintain and extend Laravel applications for agency clients.\n\nWhat you'll do\n- Build features in PHP and Laravel\n- Write MySQL queries and migrations\n- Review pull requests\n\nWhat we're looking for\n- PHP and Laravel\n- MySQL\n\nNice to have\n- Vue.js\n- REST APIs\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "part-time-web-dev",
+      "title": "Part-time Web Developer (Students Welcome)",
+      "companyName": "Mekong Bytes (Demo)",
+      "city": "Phnom Penh",
+      "countryCode": "KH",
+      "remoteType": "REMOTE",
+      "employmentType": "PART_TIME",
+      "seniority": "ENTRY",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 12,
+      "educationLevel": null,
+      "educationFields": [],
+      "salaryMin": 400,
+      "salaryMax": 600,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "html",
+        "css",
+        "javascript"
+      ],
+      "preferredSkills": [
+        "react",
+        "tailwind-css",
+        "git"
+      ],
+      "postedDaysAgo": 1,
+      "description": "About the team\nFlexible 20-hours-a-week role building marketing websites.\n\nWhat you'll do\n- Build responsive pages from designs\n- Maintain existing websites\n- Optimise page speed\n\nWhat we're looking for\n- HTML, CSS and JavaScript\n- Available ~20 hours per week\n\nNice to have\n- React\n- Tailwind CSS\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "ml-intern",
+      "title": "Machine Learning Intern",
+      "companyName": "Manila Bay Tech (Demo)",
+      "city": "Manila",
+      "countryCode": "PH",
+      "remoteType": "HYBRID",
+      "employmentType": "INTERNSHIP",
+      "seniority": "INTERNSHIP",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 6,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Computer Science",
+        "Mathematics",
+        "Data Science"
+      ],
+      "salaryMin": 20000,
+      "salaryMax": 25000,
+      "salaryCurrency": "PHP",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "python",
+        "machine-learning"
+      ],
+      "preferredSkills": [
+        "scikit-learn",
+        "pandas",
+        "pytorch",
+        "sql"
+      ],
+      "postedDaysAgo": 13,
+      "description": "About the team\nWork with our data team on appointment no-show prediction.\n\nWhat you'll do\n- Prepare datasets and features\n- Train and evaluate baseline models\n- Document experiments\n\nWhat we're looking for\n- Python\n- Coursework or projects in machine learning\n\nNice to have\n- scikit-learn\n- PyTorch\n- Pandas\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "junior-angular",
+      "title": "Junior Frontend Developer (Angular)",
+      "companyName": "Klang Valley Services (Demo)",
+      "city": "Kuala Lumpur",
+      "countryCode": "MY",
+      "remoteType": "HYBRID",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 6,
+      "maxExperienceMonths": 24,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Computer Science",
+        "Software Engineering",
+        "Information Technology"
+      ],
+      "salaryMin": 4000,
+      "salaryMax": 5200,
+      "salaryCurrency": "MYR",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "typescript",
+        "angular",
+        "html",
+        "css"
+      ],
+      "preferredSkills": [
+        "rest-apis",
+        "git",
+        "jest"
+      ],
+      "postedDaysAgo": 16,
+      "description": "About the team\nBuild internal portals for HR and finance teams.\n\nWhat you'll do\n- Develop Angular components and services\n- Integrate REST APIs\n- Write unit tests\n\nWhat we're looking for\n- TypeScript\n- Angular basics\n\nNice to have\n- Jest\n- REST APIs\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "network-tech-trainee",
+      "title": "Network Technician Trainee",
+      "companyName": "Angkor Test Labs (Demo)",
+      "city": "Phnom Penh",
+      "countryCode": "KH",
+      "remoteType": "ONSITE",
+      "employmentType": "FULL_TIME",
+      "seniority": "ENTRY",
+      "minExperienceMonths": 0,
+      "maxExperienceMonths": 6,
+      "educationLevel": "VOCATIONAL",
+      "educationFields": [
+        "Information Technology",
+        "Networking"
+      ],
+      "salaryMin": 350,
+      "salaryMax": 500,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "MONTH",
+      "requiredSkills": [
+        "networking",
+        "linux"
+      ],
+      "preferredSkills": [
+        "cybersecurity",
+        "bash",
+        "problem-solving"
+      ],
+      "postedDaysAgo": 18,
+      "description": "About the team\nA trainee programme for installing and maintaining office networks.\n\nWhat you'll do\n- Install and configure switches, routers and Wi-Fi\n- Monitor network health\n- Follow security procedures\n\nWhat we're looking for\n- Basic networking knowledge\n- Willingness to travel within the city\n\nNice to have\n- Cybersecurity basics\n- Linux\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    },
+    {
+      "slug": "junior-go-backend",
+      "title": "Junior Backend Engineer (Go)",
+      "companyName": "Danube Software (Demo)",
+      "city": "",
+      "countryCode": "DE",
+      "remoteType": "REMOTE",
+      "employmentType": "FULL_TIME",
+      "seniority": "JUNIOR",
+      "minExperienceMonths": 12,
+      "maxExperienceMonths": 36,
+      "educationLevel": "BACHELOR",
+      "educationFields": [
+        "Computer Science",
+        "Software Engineering",
+        "Information Technology"
+      ],
+      "salaryMin": 52000,
+      "salaryMax": 60000,
+      "salaryCurrency": "EUR",
+      "salaryPeriod": "YEAR",
+      "requiredSkills": [
+        "go",
+        "postgresql",
+        "rest-apis"
+      ],
+      "preferredSkills": [
+        "docker",
+        "kubernetes",
+        "microservices",
+        "git"
+      ],
+      "postedDaysAgo": 20,
+      "description": "About the team\nBuild microservices for our claims platform.\n\nWhat you'll do\n- Write services in Go\n- Design PostgreSQL schemas\n- Operate services in Kubernetes\n\nWhat we're looking for\n- Go (projects or work)\n- PostgreSQL\n\nNice to have\n- Docker\n- Kubernetes\n- Microservices\n\nThis is a demonstration listing created for AI Career Matcher. It is not a real job opening."
+    }
+  ]
+}

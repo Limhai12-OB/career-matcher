@@ -1,0 +1,21 @@
+# Secrets / local env
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local compose overrides
+docker-compose.override.yml

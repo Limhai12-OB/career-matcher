@@ -1,0 +1,9 @@
+# Runtime dependencies (pinned). Verified against Python 3.12 and 3.13.
+fastapi==0.165.0
+uvicorn[standard]==0.54.0
+pydantic==2.14.4
+pydantic-settings==2.16.3
+python-multipart==0.0.34
+pypdf==7.1.1
+python-docx==1.2.0
+anthropic==2.12.0

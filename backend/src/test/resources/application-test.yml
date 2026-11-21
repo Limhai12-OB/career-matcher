@@ -1,0 +1,18 @@
+app:
+  storage:
+    access-key: test-access-key
+    secret-key: test-secret-key-0123456789
+    bucket: test-cvs
+    encryption-key: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+  security:
+    jwt:
+      secret: test-only-secret-0123456789abcdef0123456789abcdef
+    refresh:
+      cookie-secure: false
+      # Integration tests exercise theft detection directly; the grace window is unit-tested.
+      reuse-grace: 0s
+  # Most tests register many users from 127.0.0.1; rate limiting has dedicated tests.
+  rate-limit:
+    enabled: false
+  cv:
+    sweep-interval: 1h

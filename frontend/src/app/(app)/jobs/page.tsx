@@ -1,0 +1,16 @@
+import type { Metadata } from "next";
+import { Suspense } from "react";
+
+import { PageLoading } from "@/components/states/states";
+
+import { JobsView } from "./jobs-view";
+
+export const metadata: Metadata = { title: "Jobs" };
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={<PageLoading label="Loading jobs" />}>
+      <JobsView />
+    </Suspense>
+  );
+}
