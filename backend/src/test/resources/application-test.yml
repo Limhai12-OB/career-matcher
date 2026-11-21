@@ -16,3 +16,7 @@ app:
     enabled: false
   cv:
     sweep-interval: 1h
+# Off by default (OPENAPI_ENABLED); enabled here so the generated document is tested.
+springdoc:
+  api-docs:
+    enabled: true

@@ -47,7 +47,11 @@ def _numbers(text: str) -> set[str]:
 def violations(facts: RoadmapFacts, r: RoadmapOut) -> list[str]:
     gap_skills = {g.skill for g in facts.gaps}
     resources = {res.id: res for res in facts.resources}
-    allowed = _numbers(json.dumps(facts.model_dump(by_alias=True), sort_keys=True))
+    # Resource ids are opaque: their digit runs ("…a95c…") must not become citable numbers.
+    data = facts.model_dump(by_alias=True)
+    for res in data["resources"]:
+        res["id"] = ""
+    allowed = _numbers(json.dumps(data, sort_keys=True))
     for d in (facts.average_score, facts.required_coverage):
         allowed |= {str(math.floor(d)), str(math.ceil(d))}
     allowed |= {str(s.estimated_weeks) for s in r.steps} | {str(len(r.steps))}

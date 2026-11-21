@@ -1,0 +1,129 @@
+# Production overrides. Use together with the base file:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production up -d --build
+#
+# Differences from development:
+# - Only the Caddy HTTPS proxy publishes ports (80/443). No app, database or AI port is published.
+# - APP_ENV=production: the backend and AI service refuse to start with unsafe settings.
+# - All app networks are internal-only (no internet). Only the AI service (Anthropic API) and Caddy
+#   (clients, ACME certificates) have their own networks with internet access.
+# - Read-only root filesystems, dropped capabilities, no-new-privileges, memory limits, log rotation.
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+x-hardened: &hardened
+  <<: *logging
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
+services:
+  postgres:
+    <<: *logging
+    restart: always
+    ports: !reset []
+    security_opt: ["no-new-privileges:true"]
+    shm_size: 256mb
+    deploy:
+      resources:
+        limits: { memory: 1g }
+
+  storage:
+    <<: *logging
+    restart: always
+    security_opt: ["no-new-privileges:true"]
+    deploy:
+      resources:
+        limits: { memory: 768m }
+
+  ai-service:
+    <<: *hardened
+    restart: always
+    ports: !reset []
+    tmpfs: ["/tmp:size=256m"]
+    environment:
+      APP_ENV: production
+      AI_DOCS_ENABLED: "false"
+      AI_PROVIDER: ${AI_PROVIDER:?set AI_PROVIDER (anthropic for full CV analysis)}
+    networks: [internal, egress]
+    deploy:
+      resources:
+        limits: { memory: 1g }
+
+  backend:
+    <<: *hardened
+    restart: always
+    ports: !reset []
+    tmpfs: ["/tmp:size=64m"]
+    environment:
+      APP_ENV: production
+      COOKIE_SECURE: "true"
+      OPENAPI_ENABLED: "false"
+      FORWARD_HEADERS_STRATEGY: native
+      CORS_ALLOWED_ORIGINS: https://${APP_DOMAIN:?set APP_DOMAIN}
+    deploy:
+      resources:
+        limits: { memory: 1536m }
+
+  frontend:
+    <<: *hardened
+    restart: always
+    ports: !reset []
+    build:
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN:?set API_DOMAIN}
+    tmpfs: ["/tmp:size=64m", "/app/.next/cache:size=128m,uid=100,gid=101"]
+    deploy:
+      resources:
+        limits: { memory: 512m }
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: always
+    <<: *logging
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}
+      CADDY_GLOBAL_OPTIONS: ${CADDY_GLOBAL_OPTIONS:-}
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    # "public" (internal) reaches frontend/backend; "edge" is for clients and ACME certificates.
+    networks: [public, edge]
+    deploy:
+      resources:
+        limits: { memory: 256m }
+
+networks:
+  data:
+    internal: true
+  internal:
+    internal: true
+  public:
+    internal: true
+  # Internet access for the AI service only (Anthropic API).
+  egress: {}
+  # Published ports and certificate issuance for Caddy only.
+  edge: {}
+
+volumes:
+  caddy-data:
+  caddy-config:

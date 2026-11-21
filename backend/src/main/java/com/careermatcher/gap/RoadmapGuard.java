@@ -45,7 +45,13 @@ final class RoadmapGuard {
         facts.resources().stream().collect(Collectors.toMap(RoadmapFacts.Resource::id, Function.identity()));
 
     Set<String> allowedNumbers = new HashSet<>();
-    collectNumbers(json.writeValueAsString(facts), allowedNumbers);
+    // Resource ids are opaque UUIDs: their digit runs ("…a95c…") must not become citable numbers.
+    RoadmapFacts withoutIds = new RoadmapFacts(facts.targetJobCount(), facts.averageScore(), facts.requiredCoverage(),
+        facts.gaps(), facts.existingSkills(),
+        facts.resources().stream()
+            .map(r -> new RoadmapFacts.Resource("", r.skill(), r.title(), r.provider(), r.type()))
+            .toList());
+    collectNumbers(json.writeValueAsString(withoutIds), allowedNumbers);
     for (double d : new double[] {facts.averageScore(), facts.requiredCoverage()}) {
       allowedNumbers.add(String.valueOf((long) Math.floor(d)));
       allowedNumbers.add(String.valueOf((long) Math.ceil(d)));

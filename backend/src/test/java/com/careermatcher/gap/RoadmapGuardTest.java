@@ -45,6 +45,16 @@ class RoadmapGuardTest {
   }
 
   @Test
+  void digitsInsideResourceIdsAreNotCitableNumbers() {
+    RoadmapFacts facts = new RoadmapFacts(10, 48.3, 42.5, FACTS.gaps(), List.of("Java"),
+        List.of(new RoadmapFacts.Resource("3f2a95c1-0000-4000-8000-000000000777", "Spring Boot", "Guide", "Spring", "TUTORIAL")));
+    assertThat(RoadmapGuard.violations(facts, roadmap("Covers what 95 percent of employers want.", OK), JSON))
+        .contains("unsupported number 95");
+    assertThat(RoadmapGuard.violations(facts, roadmap("Over 777 companies use it.", OK), JSON))
+        .contains("unsupported number 777");
+  }
+
+  @Test
   void inventedSkillsResourcesNumbersAndLinksAreRejected() {
     assertThat(RoadmapGuard.violations(FACTS, roadmap("A plan for you.", step("Kubernetes", List.of(), "Needed a lot.")), JSON))
         .contains("step for a skill that is not a gap: Kubernetes");

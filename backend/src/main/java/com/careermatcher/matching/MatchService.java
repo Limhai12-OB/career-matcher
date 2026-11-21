@@ -41,7 +41,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -66,6 +68,7 @@ public class MatchService {
   private final RateLimitProperties limits;
   private final JsonMapper json;
   private final Clock clock;
+  private final TransactionTemplate tx;
 
   public MatchService(
       MatchingEngine engine,
@@ -77,7 +80,9 @@ public class MatchService {
       RateLimiter rateLimiter,
       RateLimitProperties limits,
       JsonMapper json,
-      Clock clock) {
+      Clock clock,
+      PlatformTransactionManager txManager) {
+    this.tx = new TransactionTemplate(txManager);
     this.engine = engine;
     this.inputs = inputs;
     this.jobs = jobs;
@@ -159,18 +164,21 @@ public class MatchService {
    * derived only from the calculated breakdown and public job fields, and are rejected unless every
    * skill and number they cite appears in those facts.
    */
-  @Transactional
+  // Not @Transactional: the AI call can take minutes and must not hold a database connection.
+  // The current result is stored in one short transaction and the explanation in another.
   public Explanation explain(UUID userId, UUID jobId) {
-    CandidateData candidate = inputs.candidate(userId);
-    Computed c = compute(candidate, jobs.visibleJob(jobId));
-    JobMatch row = store(userId, candidate, c);
-    var existing = explanations.findByMatchId(row.getId());
-    if (existing.isPresent()) {
-      return toView(existing.get());
+    Prepared p = tx.execute(status -> {
+      CandidateData candidate = inputs.candidate(userId);
+      Computed c = compute(candidate, jobs.visibleJob(jobId));
+      JobMatch row = store(userId, candidate, c);
+      return new Prepared(row.getId(), facts(c), explanations.findByMatchId(row.getId()).map(this::toView).orElse(null));
+    });
+    if (p.existing() != null) {
+      return p.existing();
     }
     rateLimiter.consume("match-explain", userId.toString(), limits.matchExplanationPerUser());
 
-    MatchFacts facts = facts(c);
+    MatchFacts facts = p.facts();
     AiMatchExplanation e;
     try {
       e = aiClient.explain(facts);
@@ -182,7 +190,7 @@ public class MatchService {
     }
     List<String> problems = ExplanationGuard.violations(facts, e, json);
     if (!problems.isEmpty()) {
-      log.warn("Rejected ungrounded explanation for match {}: {}", row.getId(), problems);
+      log.warn("Rejected ungrounded explanation for match {}: {}", p.matchId(), problems);
       throw new ApiException(
           HttpStatus.SERVICE_UNAVAILABLE, "EXPLANATION_UNAVAILABLE",
           "The explanation could not be verified against your score, so it was not shown. Please try again.",
@@ -191,12 +199,17 @@ public class MatchService {
     Explanation view =
         new Explanation(e.provider(), e.model(), e.summary(), points(e.strengths()), points(e.gaps()),
             points(e.nextSteps()), clock.instant());
-    explanations.insertIfAbsent(
-        UUID.randomUUID(), row.getId(), e.provider(), e.model(), e.promptVersion(),
-        json.writeValueAsString(new StoredExplanation(view.summary(), view.strengths(), view.gaps(), view.nextSteps())),
-        clock.instant());
-    return explanations.findByMatchId(row.getId()).map(this::toView).orElse(view);
+    String stored =
+        json.writeValueAsString(new StoredExplanation(view.summary(), view.strengths(), view.gaps(), view.nextSteps()));
+    return tx.execute(status -> {
+      explanations.insertIfAbsent(
+          UUID.randomUUID(), p.matchId(), e.provider(), e.model(), e.promptVersion(), stored, clock.instant());
+      // A concurrent request may have stored one first; return whichever is stored.
+      return explanations.findByMatchId(p.matchId()).map(this::toView).orElse(view);
+    });
   }
+
+  private record Prepared(UUID matchId, MatchFacts facts, Explanation existing) {}
 
   // ------------------------------------------------------------------ helpers
 

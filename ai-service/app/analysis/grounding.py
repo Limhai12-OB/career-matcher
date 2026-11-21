@@ -13,6 +13,7 @@ from app.analysis.schemas import (
     CertificationOut,
     CvExtraction,
     DroppedCounts,
+    EducationLevel,
     EducationOut,
     ExperienceOut,
     ProjectOut,
@@ -33,6 +34,39 @@ def alnum(s: str) -> str:
     return _NON_ALNUM.sub("", _base(s))
 
 
+def words(s: str) -> str:
+    """Lower-case alphanumeric tokens joined by single spaces (punctuation-tolerant, word-aware)."""
+    return " ".join(_NON_ALNUM.sub(" ", _base(s)).split())
+
+
+# Words that must support a claimed education level (checked in the item's evidence and degree).
+_LEVEL_EVIDENCE: dict[EducationLevel, re.Pattern[str]] = {
+    EducationLevel.DOCTORATE: re.compile(r"\b(ph ?d|doctorate|doctoral|doctor of|d ?phil|ed ?d)\b"),
+    EducationLevel.MASTER: re.compile(
+        r"\b(masters?|m ?sc|m ?eng|m ?tech|mba|m ?phil|m ?s|m ?a|magister)\b"
+    ),
+    EducationLevel.BACHELOR: re.compile(
+        r"\b(bachelors?|b ?sc|b ?eng|b ?tech|b ?s|b ?a|b ?com|b ?it|undergraduate|licen[cs]e)\b"
+    ),
+    EducationLevel.ASSOCIATE: re.compile(r"\b(associate|associates|a ?a ?s|a ?s)\b"),
+    EducationLevel.VOCATIONAL: re.compile(
+        r"\b(vocational|diploma|certificate|tvet|polytechnic"
+        r"|technical (college|institute|school))\b"
+    ),
+    EducationLevel.BOOTCAMP: re.compile(r"\b(boot ?camp|bootcamp)\b"),
+    EducationLevel.HIGH_SCHOOL: re.compile(
+        r"\b(high school|secondary|baccalaureate|a levels?|ged|grade 12|matriculation)\b"
+    ),
+}
+
+
+def _level_supported(level: EducationLevel, *texts: str | None) -> bool:
+    if level == EducationLevel.OTHER:
+        return True
+    haystack = " ".join(words(t) for t in texts if t)
+    return _LEVEL_EVIDENCE[level].search(haystack) is not None
+
+
 def term(s: str) -> str:
     """Technology-term form: keeps + # . so that C++, C#, Node.js stay distinct."""
     # Only trailing dots are sentence punctuation; a leading dot belongs to names like ".NET".
@@ -41,12 +75,13 @@ def term(s: str) -> str:
 
 class Corpus:
     def __init__(self, text: str) -> None:
-        self.alnum = alnum(text)
+        self.words = f" {words(text)} "
         self.term = f" {term(text)} "
 
     def contains_quote(self, quote: str) -> bool:
-        q = alnum(quote)
-        return len(q) >= 2 and q in self.alnum
+        """The quote's words appear contiguously in the CV (not inside other words)."""
+        q = words(quote)
+        return len(q.replace(" ", "")) >= 2 and f" {q} " in self.words
 
     def contains_term(self, value: str, within: str | None = None) -> bool:
         """Whole-term match (C does not match inside C++; Java does not match JavaScript)."""
@@ -58,13 +93,16 @@ class Corpus:
         return re.search(pattern, haystack) is not None
 
     def contains_text(self, value: str) -> bool:
-        v = alnum(value)
-        return bool(v) and v in self.alnum
+        v = words(value)
+        return bool(v) and f" {v} " in self.words
+
+    def contains_token(self, value: str) -> bool:
+        return f" {value} " in self.words
 
 
 def _date_ok(corpus: Corpus, value: str | None) -> str | None:
-    """Keep a date only if its year appears in the document."""
-    if value and value[:4] in corpus.alnum:
+    """Keep a date only if its year appears in the document as a whole number."""
+    if value and corpus.contains_token(value[:4]):
         return value
     return None
 
@@ -91,14 +129,18 @@ def ground(extraction: CvExtraction, text: str) -> tuple[dict[str, list], Droppe
     education: list[EducationOut] = []
     for e in extraction.education:
         if corpus.contains_quote(e.evidence) and corpus.contains_text(e.institution):
+            degree = e.degree if e.degree and corpus.contains_text(e.degree) else None
             education.append(
                 EducationOut(
                     institution=e.institution,
-                    degree=e.degree if e.degree and corpus.contains_text(e.degree) else None,
+                    degree=degree,
                     field_of_study=e.field_of_study
                     if e.field_of_study and corpus.contains_text(e.field_of_study)
                     else None,
-                    level=e.level,
+                    # A level the text doesn't support is not credited (scored as OTHER).
+                    level=e.level
+                    if _level_supported(e.level, e.evidence, degree)
+                    else EducationLevel.OTHER,
                     start_date=_date_ok(corpus, e.start_date),
                     end_date=_date_ok(corpus, e.end_date),
                     ongoing=e.ongoing,
@@ -148,7 +190,7 @@ def ground(extraction: CvExtraction, text: str) -> tuple[dict[str, list], Droppe
                 CertificationOut(
                     name=c.name,
                     issuer=c.issuer if c.issuer and corpus.contains_text(c.issuer) else None,
-                    year=c.year if c.year and c.year in corpus.alnum else None,
+                    year=c.year if c.year and corpus.contains_token(c.year) else None,
                     evidence=c.evidence,
                 )
             )

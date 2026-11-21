@@ -198,3 +198,40 @@ def test_local_provider_does_not_report_terms_embedded_in_dotted_names():
     names = {s["name"] for s in res.json()["skills"]}
     assert {"Node.js", "Vue.js", "Linux"} <= names
     assert not names & {"js", "JS", "JavaScript", "Node", "Vue"}
+
+
+def test_unauthenticated_upload_is_rejected_before_the_body_is_read():
+    """The token middleware answers before the multipart body is parsed."""
+    from app.config import Settings
+    from app.main import create_app
+    from app.security import InternalTokenMiddleware
+
+    app = create_app(Settings(AI_INTERNAL_TOKEN=TEST_TOKEN, APP_ENV="test"))
+    received = []
+
+    async def inner(scope, receive, send):  # pragma: no cover - must not be reached
+        received.append(scope["path"])
+
+    mw = InternalTokenMiddleware(inner, TEST_TOKEN)
+    body_read = []
+
+    async def receive():
+        body_read.append(True)
+        return {"type": "http.request", "body": b"x" * 10, "more_body": False}
+
+    sent = []
+
+    async def send(message):
+        sent.append(message)
+
+    import asyncio
+
+    scope = {"type": "http", "path": "/v1/cv/analyze", "headers": [(b"x-internal-token", b"wrong")]}
+    asyncio.run(mw(scope, receive, send))
+    assert sent[0]["status"] == 401 and not body_read and not received
+    # Health stays public; a correct token passes through.
+    asyncio.run(mw({"type": "http", "path": "/health", "headers": []}, receive, send))
+    ok = {"type": "http", "path": "/v1/x", "headers": [(b"x-internal-token", TEST_TOKEN.encode())]}
+    asyncio.run(mw(ok, receive, send))
+    assert received == ["/health", "/v1/x"]
+    assert app is not None

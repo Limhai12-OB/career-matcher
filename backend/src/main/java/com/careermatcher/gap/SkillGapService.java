@@ -39,7 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -65,11 +67,14 @@ public class SkillGapService {
   private final RateLimitProperties limits;
   private final JsonMapper json;
   private final Clock clock;
+  private final TransactionTemplate tx;
 
   public SkillGapService(
       MatchService matches, MatchingEngine engine, SkillGapReportRepository reports,
       SkillResourceRepository resources, CandidateSkillService candidateSkills, SkillNormalizer catalog,
-      AiRoadmapClient aiClient, RateLimiter rateLimiter, RateLimitProperties limits, JsonMapper json, Clock clock) {
+      AiRoadmapClient aiClient, RateLimiter rateLimiter, RateLimitProperties limits, JsonMapper json, Clock clock,
+      PlatformTransactionManager txManager) {
+    this.tx = new TransactionTemplate(txManager);
     this.matches = matches;
     this.analyzer = new GapAnalyzer(engine);
     this.reports = reports;
@@ -147,18 +152,24 @@ public class SkillGapService {
    * only, may reference only curated resources, and is rejected if it cites unsupported numbers
    * or makes claims about qualifications or employment outcomes.
    */
-  @Transactional
+  // Not @Transactional: the AI call can take minutes and must not hold a database connection.
   public ReportView roadmap(UUID userId, UUID reportId) {
-    SkillGapReportEntity entity = load(userId, reportId);
-    if (entity.getRoadmap() != null) {
-      return view(entity, mySkills(userId));
+    Object prepared = tx.execute(status -> {
+      SkillGapReportEntity entity = load(userId, reportId);
+      if (entity.getRoadmap() != null) {
+        return view(entity, mySkills(userId));
+      }
+      GapReport report = parse(entity);
+      if (report.gaps().isEmpty()) {
+        throw new ApiException(HttpStatus.CONFLICT, "NO_GAPS", "There are no skill gaps to build a roadmap for.");
+      }
+      return facts(userId, report);
+    });
+    if (prepared instanceof ReportView existing) {
+      return existing;
     }
-    GapReport report = parse(entity);
-    if (report.gaps().isEmpty()) {
-      throw new ApiException(HttpStatus.CONFLICT, "NO_GAPS", "There are no skill gaps to build a roadmap for.");
-    }
+    RoadmapFacts facts = (RoadmapFacts) prepared;
     rateLimiter.consume("roadmap", userId.toString(), limits.roadmapPerUser());
-    RoadmapFacts facts = facts(userId, report);
     AiRoadmap roadmap;
     try {
       roadmap = aiClient.roadmap(facts);
@@ -174,10 +185,15 @@ public class SkillGapService {
           "The roadmap could not be verified against your skill gaps, so it was not shown. Please try again.",
           Map.of("reason", "AI_INVALID_OUTPUT"));
     }
-    entity.attachRoadmap(json.writeValueAsString(roadmap), roadmap.provider(), roadmap.model(), roadmap.promptVersion(),
-        clock.instant());
-    reports.saveAndFlush(entity);
-    return view(entity, mySkills(userId));
+    String stored = json.writeValueAsString(roadmap);
+    return tx.execute(status -> {
+      SkillGapReportEntity entity = load(userId, reportId);
+      if (entity.getRoadmap() == null) { // a concurrent request may have stored one first
+        entity.attachRoadmap(stored, roadmap.provider(), roadmap.model(), roadmap.promptVersion(), clock.instant());
+        reports.saveAndFlush(entity);
+      }
+      return view(entity, mySkills(userId));
+    });
   }
 
   // ------------------------------------------------------------------ helpers

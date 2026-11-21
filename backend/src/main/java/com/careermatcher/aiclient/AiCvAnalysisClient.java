@@ -104,7 +104,8 @@ public class AiCvAnalysisClient {
     try {
       analysis = strictMapper.readValue(body, AiCvAnalysis.class);
     } catch (JacksonException e) {
-      log.warn("AI analysis response could not be parsed: {}", e.getOriginalMessage());
+      // Type only: Jackson messages can quote values from the response (CV content).
+      log.warn("AI analysis response could not be parsed: {}", e.getClass().getSimpleName());
       throw new AiAnalysisException("AI_INVALID_OUTPUT", "Malformed AI response", e);
     }
     Set<ConstraintViolation<AiCvAnalysis>> violations = validator.validate(analysis);

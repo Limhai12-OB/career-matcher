@@ -63,11 +63,15 @@ management:
 
 springdoc:
   api-docs:
-    enabled: ${OPENAPI_ENABLED:true}
+    enabled: ${OPENAPI_ENABLED:false}
   swagger-ui:
-    enabled: ${OPENAPI_ENABLED:true}
+    enabled: ${OPENAPI_ENABLED:false}
 
 app:
+  # "production" enables startup checks that refuse unsafe settings (see ProductionGuard).
+  environment: ${APP_ENV:dev}
+  # Production rehearsal on *.localhost only; never set in a real deployment.
+  allow-local-origins: ${ALLOW_LOCAL_ORIGINS:false}
   security:
     jwt:
       secret: ${JWT_SECRET:}

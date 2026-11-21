@@ -15,6 +15,7 @@ from app.config import Settings, get_settings
 from app.explain.service import ExplanationProvider, ExplanationService, TemplateExplainer
 from app.middleware import RequestIdMiddleware
 from app.roadmap.service import RoadmapProvider, RoadmapService, TemplateRoadmapper
+from app.security import InternalTokenMiddleware
 
 
 def create_app(
@@ -36,6 +37,7 @@ def create_app(
         redoc_url=None,
         openapi_url="/openapi.json" if docs else None,
     )
+    app.add_middleware(InternalTokenMiddleware, token=settings.internal_token.get_secret_value())
     app.add_middleware(RequestIdMiddleware)
     app.include_router(public_router)
     app.include_router(internal_router)
@@ -54,5 +56,11 @@ def create_app(
     )
     app.state.roadmap_service = RoadmapService(roadmapper or default_roadmapper)
     app.include_router(roadmap_router)
-    logging.getLogger(__name__).info("AI provider: %s", app.state.cv_service.provider.name)
+    log = logging.getLogger(__name__)
+    log.info("AI provider: %s", app.state.cv_service.provider.name)
+    if settings.environment == "production" and settings.provider == "local":
+        log.warning(
+            "AI_PROVIDER=local in production: CV analysis runs in basic mode (skills and "
+            "education only) and explanations/roadmaps use templates"
+        )
     return app

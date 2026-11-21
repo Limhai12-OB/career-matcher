@@ -1,6 +1,6 @@
 # AI Career Matcher — Implementation Plan
 
-Status: **Milestones 1-6 complete** (Milestone 2 = rows M2+M3; Milestone 3 = rows M5+M6 + skill catalog; Milestone 4 = rest of row M4; Milestone 5 = row M7 + explanations from M8; Milestone 6 = gap dashboard from M7 + roadmap from M8) · Last updated: 2026-11-21
+Status: **Milestones 1-8 complete** (Milestone 2 = rows M2+M3; Milestone 3 = rows M5+M6 + skill catalog; Milestone 4 = rest of row M4; Milestone 5 = row M7 + explanations from M8; Milestone 6 = gap dashboard from M7 + roadmap from M8; Milestones 7-8 = integration review + row M10) · Last updated: 2026-11-21
 
 ## 0. Repository inspection (findings)
 
@@ -165,7 +165,7 @@ Each milestone ends with: run the stack → run the tests → exercise the API (
 | **M7** ✅ | Matching & gaps | engine v1, config weights, snapshots, recommendations page, gap dashboard | Golden tests pass; scores and breakdown visible |
 | **M8** ✅ | Explanations & roadmap | grounded explanation per match (cached), learning roadmap using curated resources | Outputs reference only real data; validation tests pass |
 | **M9** | Dashboard & polish | personalized dashboard from real data, animations, accessibility pass, empty/error states everywhere | Playwright journey covers all 8 MVP outcomes |
-| **M10** | Hardening & release | prod compose, security review, dependency audit, backup notes, final docs | Clean deploy from scratch using README only |
+| **M10** ✅ | Hardening & release | prod compose, security review, dependency audit, backup notes, final docs | Clean deploy from scratch using README only |
 
 ### Resolved versions (Milestone 1)
 
@@ -205,6 +205,13 @@ Each milestone ends with: run the stack → run the tests → exercise the API (
 - **Reports are immutable snapshots** (`gap-v1`) for progress tracking; "closed" and "done" are evaluated against current confirmed skills when a report is read.
 - **Learning resources are curated in a migration** (official, free, URL-checked). Roadmaps reference them by id; the AI cannot add links. Dead-link checking over time is not automated yet.
 - **Roadmap validation** is a grounding and claims guard in both services: steps only for gaps, numbers only from facts, and no promises about jobs, interviews, offers, hiring or qualification.
+
+### Milestones 7-8 decisions
+
+- **Integration review** combined an independent code review with live black-box probes of the running stack. Fixed: unauthenticated SeaweedFS filer/master on the data network; AI calls holding database connections; post-login open redirect via tab/newline; word-unaware CV grounding (e.g. "ML" inside "HTML") and unchecked education levels; roadmap guard accepting numbers that only occur inside resource UUIDs; token check after upload parsing in the AI service; settings errors that could echo secrets; a storage-bucket creation race that failed the first concurrent CV uploads on a fresh installation (found by the production rehearsal).
+- **Production = Docker Compose on one host** behind Caddy (automatic HTTPS). Two same-site hostnames (app/api) keep the SameSite=Strict refresh cookie working; the rehearsal proved separate sites break it.
+- **Fail closed:** `APP_ENV=production` makes both services refuse unsafe settings at startup instead of warning.
+- **Rehearsed, not yet deployed:** the production stack was run locally over HTTPS with fresh volumes, E2E-tested and backup/restore-tested. A public deployment and the live Claude path remain unverified.
 
 ## 10. Risks
 

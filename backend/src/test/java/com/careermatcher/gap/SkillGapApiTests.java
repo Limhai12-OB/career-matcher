@@ -176,9 +176,11 @@ class SkillGapApiTests extends CvTestBase {
   @Test
   void roadmapIsGroundedGeneratedOnceAndTracksCompletion() throws Exception {
     AtomicReference<RoadmapFacts> sent = new AtomicReference<>();
+    java.util.concurrent.atomic.AtomicBoolean inTx = new java.util.concurrent.atomic.AtomicBoolean(true);
     when(roadmaps.roadmap(any())).thenAnswer(inv -> {
       RoadmapFacts f = inv.getArgument(0);
       sent.set(f);
+      inTx.set(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
       return roadmapFrom(f, "A focused plan for the skills your best-matching jobs ask for most.");
     });
     String report = generate(candidate);
@@ -191,6 +193,7 @@ class SkillGapApiTests extends CvTestBase {
         .andExpect(jsonPath("$.roadmap.steps[0].skill").value(topGap))
         .andExpect(jsonPath("$.roadmap.steps[0].done").value(false))
         .andReturn().getResponse().getContentAsString();
+    assertThat(inTx.get()).as("transaction open during AI call").isFalse();
     List<String> urls = JsonPath.read(withRoadmap, "$.roadmap.steps[0].resources[*].url");
     assertThat(urls).allMatch(u -> u.startsWith("https://"));
 

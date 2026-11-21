@@ -250,3 +250,13 @@ async def test_claude_roadmap_request_treats_titles_as_data():
     assert calls["output_config"] == {"effort": "low"}
     content = calls["messages"][0]["content"]
     assert content.count("</gap_facts>") == 1
+
+
+def test_digits_inside_resource_ids_are_not_citable_numbers():
+    f = facts(
+        resources=[{**FACTS["resources"][0], "id": "3f2a95c1-0000-4000-8000-000000000777"}],
+    )
+    r = roadmap(
+        summary="Covers what 95 percent of employers want from you.", steps=[step(resource_ids=[])]
+    )
+    assert "unsupported number 95" in violations(f, r)

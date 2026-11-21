@@ -188,6 +188,17 @@ class MatchApiTests extends CvTestBase {
   }
 
   @Test
+  void aiCallsHoldNoDatabaseTransaction() throws Exception {
+    java.util.concurrent.atomic.AtomicBoolean inTx = new java.util.concurrent.atomic.AtomicBoolean(true);
+    when(explainer.explain(any())).thenAnswer(inv -> {
+      inTx.set(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+      return explanation("Your compatibility with this job is 85%. Nice work.", "Java");
+    });
+    api.post(candidate.accessToken(), "/api/v1/me/matches/" + javaJob + "/explanation", null).andExpect(status().isOk());
+    assertThat(inTx.get()).as("transaction open during AI call").isFalse();
+  }
+
+  @Test
   void explanationFactsContainNoPersonalData() throws Exception {
     when(explainer.explain(any())).thenReturn(explanation("Your compatibility with this job is 85%. Nice work.", "Java"));
     api.post(candidate.accessToken(), "/api/v1/me/matches/" + javaJob + "/explanation", null).andExpect(status().isOk());

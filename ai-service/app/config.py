@@ -3,14 +3,17 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # hide_input_in_errors: validation errors must never echo secrets (tokens, API keys) into logs.
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", hide_input_in_errors=True
+    )
 
-    environment: Literal["dev", "test", "prod"] = Field(default="dev", alias="APP_ENV")
+    environment: Literal["dev", "test", "production"] = Field(default="dev", alias="APP_ENV")
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = Field(
         default="INFO", alias="AI_LOG_LEVEL"
     )
@@ -37,6 +40,27 @@ class Settings(BaseSettings):
     max_text_chars: int = Field(default=40_000, alias="MAX_TEXT_CHARS")
     min_text_chars: int = Field(default=80, alias="MIN_TEXT_CHARS")
     extraction_timeout_seconds: float = Field(default=20.0, alias="EXTRACTION_TIMEOUT_SECONDS")
+
+    @field_validator("environment", mode="before")
+    @classmethod
+    def _normalize_environment(cls, v: object) -> object:
+        return "production" if isinstance(v, str) and v.lower() in ("prod", "production") else v
+
+    @model_validator(mode="after")
+    def _production_safety(self) -> "Settings":
+        """Refuse unsafe settings in production (the service must not start)."""
+        if self.environment != "production":
+            return self
+        problems = []
+        if self.docs_enabled:
+            problems.append("AI_DOCS_ENABLED must be false")
+        if self.log_level == "DEBUG":
+            problems.append("AI_LOG_LEVEL must not be DEBUG")
+        if self.provider == "anthropic" and not self.anthropic_api_key:
+            problems.append("ANTHROPIC_API_KEY is required when AI_PROVIDER=anthropic")
+        if problems:
+            raise ValueError("Unsafe production configuration: " + "; ".join(problems))
+        return self
 
 
 @lru_cache

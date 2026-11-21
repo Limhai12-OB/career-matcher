@@ -100,3 +100,81 @@ def test_dotted_names_are_single_terms():
     items, dropped = ground(ex, text)
     assert [s.name for s in items["skills"]] == ["Node.js", ".NET", "C#"]
     assert dropped.skills == 2
+
+
+# ---- word-aware matching (regressions from the pre-release review) ----
+
+HOSTILE = "Submitted my thesis on HTML and CSS.\nWorked at Google Cafe as a barista, 2021."
+
+
+def test_quotes_and_names_must_match_whole_words():
+    ex = extraction(
+        skills=[skill("ML", "ML"), skill("Go", "Go"), skill("HTML", "thesis on HTML")],
+        education=[
+            {
+                "institution": "MIT",
+                "degree": None,
+                "field_of_study": None,
+                "level": "DOCTORATE",
+                "start_date": None,
+                "end_date": None,
+                "ongoing": False,
+                "evidence": "Submitted",
+            }
+        ],
+    )
+    items, dropped = ground(ex, HOSTILE)
+    assert [s.name for s in items["skills"]] == ["HTML"]  # "ML" in HTML, "Go" in Google
+    assert dropped.skills == 2
+    assert items["education"] == []  # "MIT" is only inside "Submitted"
+    assert dropped.education == 1
+
+
+def _edu(level, evidence, degree=None):
+    return {
+        "institution": "Royal University of Phnom Penh",
+        "degree": degree,
+        "field_of_study": None,
+        "level": level,
+        "start_date": None,
+        "end_date": None,
+        "ongoing": False,
+        "evidence": evidence,
+    }
+
+
+def test_education_level_must_be_supported_by_the_text():
+    text = "Royal University of Phnom Penh\nBachelor of Science in Computer Science, 2025"
+    items, _ = ground(
+        extraction(
+            education=[
+                _edu("BACHELOR", "Bachelor of Science in Computer Science"),
+                _edu("DOCTORATE", "Bachelor of Science in Computer Science"),  # inflated
+                _edu("MASTER", "Royal University of Phnom Penh"),  # no degree words
+            ]
+        ),
+        text,
+    )
+    assert [e.level for e in items["education"]] == ["BACHELOR", "OTHER", "OTHER"]
+
+
+def test_common_degree_abbreviations_support_levels():
+    text = "Royal University of Phnom Penh\nB.Sc. Computer Science\nM.Sc in Data Science\nPh.D. AI"
+    items, _ = ground(
+        extraction(
+            education=[
+                _edu("BACHELOR", "B.Sc. Computer Science"),
+                _edu("MASTER", "M.Sc in Data Science"),
+                _edu("DOCTORATE", "Ph.D. AI"),
+            ]
+        ),
+        text,
+    )
+    assert [e.level for e in items["education"]] == ["BACHELOR", "MASTER", "DOCTORATE"]
+
+
+def test_years_must_be_whole_numbers_in_the_text():
+    edu = _edu("OTHER", "Royal University of Phnom Penh")
+    edu["end_date"] = "2021"
+    items, _ = ground(extraction(education=[edu]), "Royal University of Phnom Penh\nPhone 0120219")
+    assert items["education"][0].end_date is None  # "2021" only inside a phone number

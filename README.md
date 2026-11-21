@@ -4,11 +4,13 @@ AI-powered career guidance for university students, fresh graduates and entry-le
 It analyzes CVs, extracts skills, recommends entry-level IT jobs with deterministic compatibility
 scores, and explains skill gaps.
 
-> **Status:** Milestones 1-6 are complete. Candidates can register, onboard, analyze their CV and
+> **Status:** Milestones 1-8 are complete. Candidates can register, onboard, analyze their CV and
 > confirm skills, search jobs, get personalized recommendations with transparent, deterministic
 > compatibility scores and grounded explanations, and see their skill gaps with a validated learning
-> roadmap and progress over time. Admins manage job listings. See
-> [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md).
+> roadmap and progress over time. Admins manage job listings. A production configuration (HTTPS
+> reverse proxy, hardened containers, startup safety checks) has been rehearsed locally; see
+> [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and the known limitations there before deploying.
+> Plan: [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
 
@@ -52,7 +54,9 @@ backend/        Spring Boot app (Maven wrapper; no global Maven needed)
 ai-service/     FastAPI app
   app/documents/  type sniffing, sandboxed PDF/DOCX text extraction, text cleaning, injection screening
   app/analysis/   schemas, prompt, providers (anthropic, local), grounding checks, orchestration
-infra/seaweedfs/  storage start-up script
+infra/seaweedfs/  storage start-up script (only the credentialed S3 gateway listens on the network)
+infra/caddy/      production HTTPS reverse proxy (Caddyfile)
+docker-compose.prod.yml   production overrides (see docs/DEPLOYMENT.md)
 frontend/       Next.js app
   src/app/        routes: (auth) login/register, (onboarding), (app) dashboard/profile/preferences/settings
   src/components/ ui/ (shadcn), forms/, auth/ guards, shell/
@@ -91,7 +95,7 @@ docker compose ps        # all five services should become "healthy"
 |---|---|---|
 | Frontend | http://localhost:3000 | `/status` shows live health of all services |
 | Backend API | http://localhost:8080 | |
-| Swagger UI | http://localhost:8080/swagger-ui.html | disable with `OPENAPI_ENABLED=false` |
+| Swagger UI | http://localhost:8080/swagger-ui.html | only when `OPENAPI_ENABLED=true` (default off; `.env.example` enables it for development) |
 | AI service | http://127.0.0.1:8000 | loopback only, for debugging; `/docs` when `AI_DOCS_ENABLED=true` |
 | PostgreSQL | 127.0.0.1:5432 | loopback only |
 
@@ -326,6 +330,21 @@ user reviews skills + evidence ─▶ confirms selected skills ─▶ candidate_
 
 Both providers go through the same grounding and validation path.
 
+## Production deployment
+
+Use [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md): production compose override, environment template
+(`.env.production.example`), HTTPS requirements, database migration and rollback instructions,
+backups, and the final deployment checklist. In short:
+
+```bash
+cp .env.production.example .env.production   # fill in every CHANGE value; chmod 600
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production up -d --build
+```
+
+Only the Caddy HTTPS proxy publishes ports. With `APP_ENV=production` the backend and AI service
+refuse to start with unsafe settings (insecure cookies, API docs on, non-HTTPS CORS origins,
+missing proxy headers, debug logging, missing API key).
+
 ## Local development (without Docker for the apps)
 
 Run Postgres and storage in Docker, and each app natively with hot reload. Load the variables from `.env`
@@ -408,7 +427,8 @@ required secret is missing.
 | `RATE_LIMIT_GAP_REPORTS_PER_HOUR` | backend | Skill gap analyses per user (default 20) |
 | `RATE_LIMIT_ROADMAPS_PER_HOUR` | backend | Learning roadmap generations per user (default 10) |
 | `CORS_ALLOWED_ORIGINS` | backend | Comma-separated browser origins |
-| `OPENAPI_ENABLED` | backend | Toggle Swagger UI / OpenAPI |
+| `OPENAPI_ENABLED` | backend | Swagger UI / OpenAPI (default `false`; refused in production) |
+| `APP_ENV` | backend, ai-service | `production` enables startup checks that refuse unsafe settings |
 | `AI_DOCS_ENABLED` | ai-service | Toggle FastAPI docs |
 | `*_HOST_PORT` | compose | Host port mappings |
 | `BACKEND_INTERNAL_URL` | frontend (server side) | How the Next.js server reaches the backend |

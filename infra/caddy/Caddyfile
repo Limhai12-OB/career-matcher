@@ -1,0 +1,43 @@
+# HTTPS reverse proxy for AI Career Matcher (production).
+#
+# - Automatic certificates (Let's Encrypt / ZeroSSL) for both domains; HTTP redirects to HTTPS.
+# - The only container that publishes ports. Backend, frontend, AI service, database and storage
+#   are reachable only on internal Docker networks.
+# - Internal endpoints (actuator, OpenAPI) are never exposed publicly.
+{
+	# e.g. "email ops@example.org" in production, "local_certs" for a local rehearsal.
+	{$CADDY_GLOBAL_OPTIONS}
+}
+
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+		-X-Powered-By
+	}
+}
+
+{$APP_DOMAIN} {
+	import security_headers
+	encode zstd gzip
+	reverse_proxy frontend:3000
+}
+
+{$API_DOMAIN} {
+	import security_headers
+	encode zstd gzip
+
+	@internal path /actuator /actuator/* /v3/api-docs /v3/api-docs/* /swagger-ui /swagger-ui/* /swagger-ui.html
+	respond @internal 404
+
+	# CV uploads are limited to 5 MB by the API; reject anything far larger at the edge.
+	request_body {
+		max_size 8MB
+	}
+
+	# Caddy replaces client-supplied X-Forwarded-For with the real client IP; the backend
+	# (FORWARD_HEADERS_STRATEGY=native) trusts it only from private network addresses.
+	reverse_proxy backend:8080
+}
