@@ -18,7 +18,8 @@ public record RateLimitProperties(
     @Valid @NotNull Rule registerPerIp,
     @Valid @NotNull Rule refreshPerIp,
     @Valid @NotNull Rule sensitiveAccountActionPerUser,
-    @Valid @NotNull Rule cvUploadPerUser) {
+    @Valid @NotNull Rule cvUploadPerUser,
+    @Valid @NotNull Rule matchExplanationPerUser) {
 
   public record Rule(@Positive int capacity, @NotNull Duration period) {}
 }

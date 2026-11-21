@@ -8,13 +8,17 @@ from app.analysis.factory import build_provider
 from app.analysis.providers.base import ExtractionProvider
 from app.analysis.service import CvAnalysisService
 from app.api.cv import router as cv_router
+from app.api.explain import router as explain_router
 from app.api.health import internal_router, public_router
 from app.config import Settings, get_settings
+from app.explain.service import ExplanationProvider, ExplanationService, TemplateExplainer
 from app.middleware import RequestIdMiddleware
 
 
 def create_app(
-    settings: Settings | None = None, provider: ExtractionProvider | None = None
+    settings: Settings | None = None,
+    provider: ExtractionProvider | None = None,
+    explainer: ExplanationProvider | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     logging.basicConfig(
@@ -34,6 +38,13 @@ def create_app(
     app.include_router(internal_router)
     app.include_router(cv_router)
     app.state.settings = settings
-    app.state.cv_service = CvAnalysisService(settings, provider or build_provider(settings))
+    extraction_provider = provider or build_provider(settings)
+    app.state.cv_service = CvAnalysisService(settings, extraction_provider)
+    # The Anthropic provider also explains matches; the local one uses deterministic templates.
+    default_explainer = (
+        extraction_provider if hasattr(extraction_provider, "explain") else TemplateExplainer()
+    )
+    app.state.explanation_service = ExplanationService(explainer or default_explainer)
+    app.include_router(explain_router)
     logging.getLogger(__name__).info("AI provider: %s", app.state.cv_service.provider.name)
     return app

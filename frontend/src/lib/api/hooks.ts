@@ -7,6 +7,7 @@ import {
   catalogApi,
   cvApi,
   jobsApi,
+  matchesApi,
   onboardingApi,
   preferencesApi,
   profileApi,
@@ -49,6 +50,7 @@ export function useUpdatePreferences() {
     mutationFn: (body: PreferencesUpdate) => preferencesApi.update(body),
     onSuccess: (prefs) => {
       qc.setQueryData(queryKeys.preferences, prefs);
+      void qc.invalidateQueries({ queryKey: ["me", "matches"] });
       // Completeness on the profile depends on preferences.
       void qc.invalidateQueries({ queryKey: queryKeys.profile });
       void qc.invalidateQueries({ queryKey: queryKeys.onboarding });
@@ -121,6 +123,7 @@ export function useApplySkills(analysisId: string) {
     mutationFn: (skillIds: string[]) => cvApi.applySkills(analysisId, skillIds),
     onSuccess: (skills) => {
       qc.setQueryData(cvKeys.skills, skills);
+      void qc.invalidateQueries({ queryKey: ["me", "matches"] });
       void qc.invalidateQueries({ queryKey: cvKeys.analysis(analysisId) });
       void qc.invalidateQueries({ queryKey: cvKeys.documents });
     },
@@ -131,7 +134,10 @@ export function useRemoveSkill() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (skillId: string) => skillsApi.remove(skillId),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: cvKeys.skills }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: cvKeys.skills });
+      void qc.invalidateQueries({ queryKey: ["me", "matches"] });
+    },
   });
 }
 
@@ -186,4 +192,40 @@ export function useInvalidateJobs() {
     void qc.invalidateQueries({ queryKey: ["admin", "jobs"] });
     void qc.invalidateQueries({ queryKey: ["jobs"] });
   };
+}
+
+// ---- Matching ----
+
+export const matchKeys = {
+  all: ["me", "matches"] as const,
+  list: (params: string) => ["me", "matches", "list", params] as const,
+  detail: (jobId: string) => ["me", "matches", "detail", jobId] as const,
+};
+
+export function useRecommendations(params: URLSearchParams, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: matchKeys.list(params.toString()),
+    queryFn: () => matchesApi.recommendations(params),
+    placeholderData: keepPreviousData,
+    enabled: options.enabled ?? true,
+  });
+}
+
+export function useMatch(jobId: string, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: matchKeys.detail(jobId),
+    queryFn: () => matchesApi.detail(jobId),
+    enabled: options.enabled ?? true,
+  });
+}
+
+export function useExplainMatch(jobId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => matchesApi.explain(jobId),
+    onSuccess: (explanation) =>
+      qc.setQueryData(matchKeys.detail(jobId), (old: import("./types").MatchDetail | undefined) =>
+        old ? { ...old, explanation } : old,
+      ),
+  });
 }

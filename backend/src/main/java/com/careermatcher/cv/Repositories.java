@@ -39,6 +39,8 @@ interface CvAnalysisRepository extends JpaRepository<CvAnalysis, UUID> {
 
   boolean existsByUserIdAndStatusIn(UUID userId, Collection<AnalysisStatus> statuses);
 
+  Optional<CvAnalysis> findFirstByUserIdAndStatusOrderByCompletedAtDesc(UUID userId, AnalysisStatus status);
+
   /** Atomically claims a pending analysis for processing; returns 1 if this caller won. */
   @Modifying
   @Query(

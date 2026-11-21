@@ -18,7 +18,8 @@ import {
 import { AnalysisStatusBadge } from "@/components/cv/analysis-status";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCandidateSkills, useCvDocuments, usePreferences, useProfile } from "@/lib/api/hooks";
+import { useCandidateSkills, useCvDocuments, usePreferences, useProfile, useRecommendations } from "@/lib/api/hooks";
+import { ScoreRing } from "@/components/matching/score-ring";
 import { countryName } from "@/lib/countries";
 import { COMPLETENESS_ACTIONS, EMPLOYMENT_TYPE_LABELS, REMOTE_LABELS } from "@/lib/labels";
 
@@ -86,6 +87,8 @@ export function DashboardView() {
         </Card>
 
         <CvCard />
+
+        <TopMatches />
 
         <Card className="lg:col-span-3">
           <CardHeader>
@@ -219,6 +222,53 @@ function CvCard() {
               </Button>
             </div>
           </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+const TOP_PARAMS = new URLSearchParams({ size: "3" });
+
+function TopMatches() {
+  const recs = useRecommendations(TOP_PARAMS);
+  return (
+    <Card className="lg:col-span-3">
+      <CardHeader>
+        <CardTitle>Top matches</CardTitle>
+        <CardDescription>Your best-scoring jobs right now.</CardDescription>
+        <CardAction>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/matches">
+              All recommendations <ArrowRight />
+            </Link>
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        {recs.isPending ? (
+          <Skeleton className="h-20 w-full" />
+        ) : recs.isError ? (
+          <p className="text-sm text-muted-foreground">Couldn&apos;t load recommendations.</p>
+        ) : recs.data.content.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No published jobs yet.</p>
+        ) : (
+          <ul className="grid gap-3 md:grid-cols-3">
+            {recs.data.content.map((m) => (
+              <li key={m.job.id}>
+                <Link
+                  href={`/jobs/${m.job.id}`}
+                  className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:border-primary/40"
+                >
+                  <ScoreRing score={m.totalScore} size={52} />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium">{m.job.title}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{m.job.companyName}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
       </CardContent>
     </Card>

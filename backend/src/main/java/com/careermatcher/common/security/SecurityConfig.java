@@ -70,6 +70,9 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/api/v1/admin/**")
                     .hasRole("ADMIN")
+                    // Matching needs a candidate profile; admins have none.
+                    .requestMatchers("/api/v1/me/matches", "/api/v1/me/matches/**")
+                    .hasRole("CANDIDATE")
                     .anyRequest()
                     .authenticated())
         .oauth2ResourceServer(

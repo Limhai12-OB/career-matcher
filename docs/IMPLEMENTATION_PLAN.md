@@ -1,6 +1,6 @@
 # AI Career Matcher — Implementation Plan
 
-Status: **Milestones 1-4 complete** (Milestone 2 = rows M2+M3; Milestone 3 = rows M5+M6 + skill catalog; Milestone 4 = rest of row M4) · Last updated: 2026-11-21
+Status: **Milestones 1-5 complete** (Milestone 2 = rows M2+M3; Milestone 3 = rows M5+M6 + skill catalog; Milestone 4 = rest of row M4; Milestone 5 = row M7 + explanations from M8) · Last updated: 2026-11-21
 
 ## 0. Repository inspection (findings)
 
@@ -162,7 +162,7 @@ Each milestone ends with: run the stack → run the tests → exercise the API (
 | **M4** ✅ | Skills & jobs | canonical skill catalog + aliases (seeded via migration), normalization service; admin job CRUD with required/preferred skills; paginated, filterable job list + detail; bookmarks | Admin creates a job, candidate finds and bookmarks it |
 | **M5** ✅ | AI service | extraction pipeline, schemas, provider + fake, grounding, injection defenses, internal auth | pytest suite passes, including adversarial fixtures |
 | **M6** ✅ | CV pipeline | SeaweedFS (MinIO no longer publishes images) in compose, client-side AES-GCM; upload → storage → async analysis → normalization → review/confirm → candidate skills; history; delete | Real PDF/DOCX end-to-end produces a validated analysis |
-| **M7** | Matching & gaps | engine v1, config weights, snapshots, recommendations page, gap dashboard | Golden tests pass; scores and breakdown visible |
+| **M7** ✅ | Matching & gaps | engine v1, config weights, snapshots, recommendations page, gap dashboard | Golden tests pass; scores and breakdown visible |
 | **M8** | Explanations & roadmap | grounded explanation per match (cached), learning roadmap using curated resources | Outputs reference only real data; validation tests pass |
 | **M9** | Dashboard & polish | personalized dashboard from real data, animations, accessibility pass, empty/error states everywhere | Playwright journey covers all 8 MVP outcomes |
 | **M10** | Hardening & release | prod compose, security review, dependency audit, backup notes, final docs | Clean deploy from scratch using README only |
@@ -192,6 +192,12 @@ Each milestone ends with: run the stack → run the tests → exercise the API (
 - **Companies are inline fields** on the job (name and website), not a separate table; a companies entity can come with employer accounts.
 - **Search uses `ILIKE` with trigram indexes** on title and company (plus description). That's adequate at MVP scale; switch to full-text search if the catalogue grows large.
 - **Admins are bootstrapped from env** (no self-service admin signup, no promotion of existing accounts).
+
+### Milestone 5 decisions
+
+- **Scoring is a pure function** (`MatchingEngine`, `match-v1`) with hand-computed unit tests. The section 4 rules were refined: projects need 3 matching job skills (or all, if fewer) for full credit; experience merges overlapping roles; education treats ongoing degrees as 0.8; salary is compared only in the same currency.
+- **Results are computed on request** for all published jobs (cheap at current catalogue size) and stored only when they change (content hash). At thousands of jobs, move to precomputation with pre-filtering.
+- **Explanations are generated on demand, not per listing**, to control cost. Both services enforce the grounding guard. The skill-gap dashboard and learning roadmap remain for the next milestone.
 
 ## 10. Risks
 
