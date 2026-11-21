@@ -13,6 +13,8 @@ from app.analysis.schemas import CvExtraction
 from app.config import Settings
 from app.explain import prompt as explain_prompt
 from app.explain.schemas import ExplanationOut, MatchFacts
+from app.roadmap import prompt as roadmap_prompt
+from app.roadmap.schemas import RoadmapFacts, RoadmapOut
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +66,20 @@ class AnthropicProvider:
         )
         parsed = response.parsed_output
         if not isinstance(parsed, ExplanationOut):
+            raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "no parsed output")
+        return parsed, response.model
+
+    async def roadmap(self, facts: RoadmapFacts) -> tuple[RoadmapOut, str]:
+        from app.roadmap.service import facts_json
+
+        response = await self._parse(
+            system=roadmap_prompt.SYSTEM_PROMPT,
+            user=roadmap_prompt.build_user_message(facts_json(facts)),
+            output_format=RoadmapOut,
+            effort="low",
+        )
+        parsed = response.parsed_output
+        if not isinstance(parsed, RoadmapOut):
             raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "no parsed output")
         return parsed, response.model
 

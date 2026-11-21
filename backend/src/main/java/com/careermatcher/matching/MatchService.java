@@ -21,7 +21,6 @@ import com.careermatcher.matching.dto.MatchDtos.Recommendations;
 import com.careermatcher.matching.engine.MatchInputs;
 import com.careermatcher.matching.engine.MatchResult;
 import com.careermatcher.matching.engine.MatchingEngine;
-import com.careermatcher.matching.engine.MatchingWeights;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -69,7 +68,7 @@ public class MatchService {
   private final Clock clock;
 
   public MatchService(
-      MatchingWeights weights,
+      MatchingEngine engine,
       MatchInputMapper inputs,
       JobService jobs,
       JobMatchRepository matches,
@@ -79,7 +78,7 @@ public class MatchService {
       RateLimitProperties limits,
       JsonMapper json,
       Clock clock) {
-    this.engine = new MatchingEngine(weights);
+    this.engine = engine;
     this.inputs = inputs;
     this.jobs = jobs;
     this.matches = matches;
@@ -91,10 +90,38 @@ public class MatchService {
     this.clock = clock;
   }
 
+  /** A scored job, for other modules (e.g. skill gap analysis). */
+  public record RankedJob(MatchInputs.Job job, String company, String dataOrigin, MatchResult result) {}
+
+  /** The candidate's engine inputs and their best-matching published jobs. */
+  public record Ranking(MatchInputs.Candidate candidate, List<RankedJob> jobs) {}
+
+  /** Top {@code limit} published jobs for the candidate (results are stored like recommendations). */
+  @Transactional
+  public Ranking rank(UUID userId, int limit) {
+    CandidateData candidate = inputs.candidate(userId);
+    List<Computed> all = computeAll(userId, candidate, null);
+    return new Ranking(
+        candidate.candidate(),
+        all.stream()
+            .limit(limit)
+            .map(c -> new RankedJob(inputs.job(c.job()), c.job().getCompanyName(), c.job().getDataOrigin().name(), c.result()))
+            .toList());
+  }
+
   /** Scores every published job for the candidate, best first, storing new result versions. */
   @Transactional
   public Recommendations recommendations(UUID userId, DataOrigin origin, int page, int size) {
     CandidateData candidate = inputs.candidate(userId);
+    List<Computed> computed = computeAll(userId, candidate, origin);
+    int from = Math.min(page * size, computed.size());
+    int to = Math.min(from + size, computed.size());
+    List<MatchSummary> content = computed.subList(from, to).stream().map(this::summary).toList();
+    int totalPages = (int) Math.ceil((double) computed.size() / size);
+    return new Recommendations(content, new PageInfo(page, size, computed.size(), totalPages), status(candidate));
+  }
+
+  private List<Computed> computeAll(UUID userId, CandidateData candidate, DataOrigin origin) {
     YearMonth today = YearMonth.now(clock.withZone(ZoneOffset.UTC));
     Set<String> stored = new HashSet<>(matches.findKeys(userId, MatchingEngine.VERSION));
 
@@ -114,12 +141,7 @@ public class MatchService {
         Comparator.comparingDouble((Computed c) -> c.result().totalScore()).reversed()
             .thenComparing(c -> c.job().getPostedOn(), Comparator.reverseOrder())
             .thenComparing(c -> c.job().getId()));
-
-    int from = Math.min(page * size, computed.size());
-    int to = Math.min(from + size, computed.size());
-    List<MatchSummary> content = computed.subList(from, to).stream().map(this::summary).toList();
-    int totalPages = (int) Math.ceil((double) computed.size() / size);
-    return new Recommendations(content, new PageInfo(page, size, computed.size(), totalPages), status(candidate));
+    return computed;
   }
 
   /** Compatibility of one published job. */

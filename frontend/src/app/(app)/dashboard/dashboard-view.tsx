@@ -18,7 +18,15 @@ import {
 import { AnalysisStatusBadge } from "@/components/cv/analysis-status";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCandidateSkills, useCvDocuments, usePreferences, useProfile, useRecommendations } from "@/lib/api/hooks";
+import {
+  useCandidateSkills,
+  useCvDocuments,
+  useGapProgress,
+  useGapReport,
+  usePreferences,
+  useProfile,
+  useRecommendations,
+} from "@/lib/api/hooks";
 import { ScoreRing } from "@/components/matching/score-ring";
 import { countryName } from "@/lib/countries";
 import { COMPLETENESS_ACTIONS, EMPLOYMENT_TYPE_LABELS, REMOTE_LABELS } from "@/lib/labels";
@@ -56,7 +64,7 @@ export function DashboardView() {
           <CardHeader>
             <CardTitle>Profile strength</CardTitle>
             <CardDescription>
-              A complete profile leads to more accurate job matches once matching launches.
+              A complete profile leads to more accurate job matches.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -89,6 +97,8 @@ export function DashboardView() {
         <CvCard />
 
         <TopMatches />
+
+        <SkillGapsCard />
 
         <Card className="lg:col-span-3">
           <CardHeader>
@@ -269,6 +279,58 @@ function TopMatches() {
               </li>
             ))}
           </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SkillGapsCard() {
+  const progress = useGapProgress();
+  const report = useGapReport(progress.data?.latestReportId);
+  const r = report.data;
+  const open = r ? r.gaps.filter((g) => !g.closed) : [];
+  return (
+    <Card className="lg:col-span-3">
+      <CardHeader>
+        <CardTitle>Skill gaps</CardTitle>
+        <CardDescription>What your best-matching jobs ask for that you haven&apos;t confirmed yet.</CardDescription>
+        <CardAction>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/skill-gaps">
+              {progress.data?.latestReportId ? "View analysis" : "Analyze"} <ArrowRight />
+            </Link>
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        {progress.isPending || (progress.data?.latestReportId && report.isPending) ? (
+          <Skeleton className="h-12 w-full" />
+        ) : progress.isError || report.isError ? (
+          <p className="text-sm text-muted-foreground">Couldn&apos;t load your skill gaps.</p>
+        ) : !r ? (
+          <p className="text-sm text-muted-foreground">
+            No analysis yet. Find out which skills would raise your compatibility the most.
+          </p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+            <span>
+              <span className="font-semibold tabular-nums">{r.requiredCoverage.toFixed(1)}%</span> of required skills
+            </span>
+            <span>
+              <span className="font-semibold tabular-nums">{progress.data?.closedSinceFirst.length ?? 0}</span> gaps
+              closed
+            </span>
+            {open.length > 0 && (
+              <span className="text-muted-foreground">
+                Next:{" "}
+                {open
+                  .slice(0, 3)
+                  .map((g) => g.name)
+                  .join(", ")}
+              </span>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

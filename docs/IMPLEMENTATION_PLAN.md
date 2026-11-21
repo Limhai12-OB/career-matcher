@@ -1,6 +1,6 @@
 # AI Career Matcher — Implementation Plan
 
-Status: **Milestones 1-5 complete** (Milestone 2 = rows M2+M3; Milestone 3 = rows M5+M6 + skill catalog; Milestone 4 = rest of row M4; Milestone 5 = row M7 + explanations from M8) · Last updated: 2026-11-21
+Status: **Milestones 1-6 complete** (Milestone 2 = rows M2+M3; Milestone 3 = rows M5+M6 + skill catalog; Milestone 4 = rest of row M4; Milestone 5 = row M7 + explanations from M8; Milestone 6 = gap dashboard from M7 + roadmap from M8) · Last updated: 2026-11-21
 
 ## 0. Repository inspection (findings)
 
@@ -163,7 +163,7 @@ Each milestone ends with: run the stack → run the tests → exercise the API (
 | **M5** ✅ | AI service | extraction pipeline, schemas, provider + fake, grounding, injection defenses, internal auth | pytest suite passes, including adversarial fixtures |
 | **M6** ✅ | CV pipeline | SeaweedFS (MinIO no longer publishes images) in compose, client-side AES-GCM; upload → storage → async analysis → normalization → review/confirm → candidate skills; history; delete | Real PDF/DOCX end-to-end produces a validated analysis |
 | **M7** ✅ | Matching & gaps | engine v1, config weights, snapshots, recommendations page, gap dashboard | Golden tests pass; scores and breakdown visible |
-| **M8** | Explanations & roadmap | grounded explanation per match (cached), learning roadmap using curated resources | Outputs reference only real data; validation tests pass |
+| **M8** ✅ | Explanations & roadmap | grounded explanation per match (cached), learning roadmap using curated resources | Outputs reference only real data; validation tests pass |
 | **M9** | Dashboard & polish | personalized dashboard from real data, animations, accessibility pass, empty/error states everywhere | Playwright journey covers all 8 MVP outcomes |
 | **M10** | Hardening & release | prod compose, security review, dependency audit, backup notes, final docs | Clean deploy from scratch using README only |
 
@@ -197,7 +197,14 @@ Each milestone ends with: run the stack → run the tests → exercise the API (
 
 - **Scoring is a pure function** (`MatchingEngine`, `match-v1`) with hand-computed unit tests. The section 4 rules were refined: projects need 3 matching job skills (or all, if fewer) for full credit; experience merges overlapping roles; education treats ongoing degrees as 0.8; salary is compared only in the same currency.
 - **Results are computed on request** for all published jobs (cheap at current catalogue size) and stored only when they change (content hash). At thousands of jobs, move to precomputation with pre-filtering.
-- **Explanations are generated on demand, not per listing**, to control cost. Both services enforce the grounding guard. The skill-gap dashboard and learning roadmap remain for the next milestone.
+- **Explanations are generated on demand, not per listing**, to control cost. Both services enforce the grounding guard.
+
+### Milestone 6 decisions
+
+- **Gap analysis targets the 10 best matches**, not all jobs, so gaps reflect jobs the candidate is close to. Priority uses only required/preferred counts; the average score gain is computed by re-running the matching engine, so "why it matters" is a measured number.
+- **Reports are immutable snapshots** (`gap-v1`) for progress tracking; "closed" and "done" are evaluated against current confirmed skills when a report is read.
+- **Learning resources are curated in a migration** (official, free, URL-checked). Roadmaps reference them by id; the AI cannot add links. Dead-link checking over time is not automated yet.
+- **Roadmap validation** is a grounding and claims guard in both services: steps only for gaps, numbers only from facts, and no promises about jobs, interviews, offers, hiring or qualification.
 
 ## 10. Risks
 

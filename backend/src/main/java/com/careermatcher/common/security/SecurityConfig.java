@@ -71,7 +71,9 @@ public class SecurityConfig {
                     .requestMatchers("/api/v1/admin/**")
                     .hasRole("ADMIN")
                     // Matching needs a candidate profile; admins have none.
-                    .requestMatchers("/api/v1/me/matches", "/api/v1/me/matches/**")
+                    .requestMatchers(
+                        "/api/v1/me/matches", "/api/v1/me/matches/**",
+                        "/api/v1/me/skill-gaps", "/api/v1/me/skill-gaps/**")
                     .hasRole("CANDIDATE")
                     .anyRequest()
                     .authenticated())

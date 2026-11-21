@@ -1,6 +1,8 @@
 import { apiRequest } from "@/lib/auth/session";
 
 import type {
+  GapProgress,
+  GapReport,
   MatchDetail,
   MatchExplanation,
   Recommendations,
@@ -119,4 +121,12 @@ export const matchesApi = {
     apiRequest<MatchExplanation>(`/api/v1/me/matches/${encodeURIComponent(jobId)}/explanation`, {
       method: "POST",
     }),
+};
+
+export const skillGapsApi = {
+  progress: () => apiRequest<GapProgress>("/api/v1/me/skill-gaps"),
+  report: (id: string) => apiRequest<GapReport>(`/api/v1/me/skill-gaps/${encodeURIComponent(id)}`),
+  generate: () => apiRequest<GapReport>("/api/v1/me/skill-gaps", { method: "POST" }),
+  roadmap: (id: string) =>
+    apiRequest<GapReport>(`/api/v1/me/skill-gaps/${encodeURIComponent(id)}/roadmap`, { method: "POST" }),
 };

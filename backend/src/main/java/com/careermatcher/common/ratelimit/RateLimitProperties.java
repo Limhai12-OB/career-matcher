@@ -19,7 +19,9 @@ public record RateLimitProperties(
     @Valid @NotNull Rule refreshPerIp,
     @Valid @NotNull Rule sensitiveAccountActionPerUser,
     @Valid @NotNull Rule cvUploadPerUser,
-    @Valid @NotNull Rule matchExplanationPerUser) {
+    @Valid @NotNull Rule matchExplanationPerUser,
+    @Valid @NotNull Rule gapReportPerUser,
+    @Valid @NotNull Rule roadmapPerUser) {
 
   public record Rule(@Positive int capacity, @NotNull Duration period) {}
 }

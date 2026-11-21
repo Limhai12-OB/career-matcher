@@ -93,6 +93,12 @@ app:
       period: 1h
     refresh-per-ip: { capacity: 60, period: 1m }
     sensitive-account-action-per-user: { capacity: 5, period: 15m }
+    gap-report-per-user:
+      capacity: ${RATE_LIMIT_GAP_REPORTS_PER_HOUR:20}
+      period: 1h
+    roadmap-per-user:
+      capacity: ${RATE_LIMIT_ROADMAPS_PER_HOUR:10}
+      period: 1h
     match-explanation-per-user:
       capacity: ${RATE_LIMIT_EXPLANATIONS_PER_HOUR:30}
       period: 1h

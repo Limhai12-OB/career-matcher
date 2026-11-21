@@ -11,6 +11,7 @@ import {
   onboardingApi,
   preferencesApi,
   profileApi,
+  skillGapsApi,
   skillsApi,
 } from "./endpoints";
 import type { PreferencesUpdate, ProfileUpdate } from "./types";
@@ -51,6 +52,7 @@ export function useUpdatePreferences() {
     onSuccess: (prefs) => {
       qc.setQueryData(queryKeys.preferences, prefs);
       void qc.invalidateQueries({ queryKey: ["me", "matches"] });
+      void qc.invalidateQueries({ queryKey: ["me", "skill-gaps"] });
       // Completeness on the profile depends on preferences.
       void qc.invalidateQueries({ queryKey: queryKeys.profile });
       void qc.invalidateQueries({ queryKey: queryKeys.onboarding });
@@ -124,6 +126,7 @@ export function useApplySkills(analysisId: string) {
     onSuccess: (skills) => {
       qc.setQueryData(cvKeys.skills, skills);
       void qc.invalidateQueries({ queryKey: ["me", "matches"] });
+      void qc.invalidateQueries({ queryKey: ["me", "skill-gaps"] });
       void qc.invalidateQueries({ queryKey: cvKeys.analysis(analysisId) });
       void qc.invalidateQueries({ queryKey: cvKeys.documents });
     },
@@ -137,6 +140,7 @@ export function useRemoveSkill() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: cvKeys.skills });
       void qc.invalidateQueries({ queryKey: ["me", "matches"] });
+      void qc.invalidateQueries({ queryKey: ["me", "skill-gaps"] });
     },
   });
 }
@@ -227,5 +231,47 @@ export function useExplainMatch(jobId: string) {
       qc.setQueryData(matchKeys.detail(jobId), (old: import("./types").MatchDetail | undefined) =>
         old ? { ...old, explanation } : old,
       ),
+  });
+}
+
+// ---- Skill gaps ----
+
+export const gapKeys = {
+  all: ["me", "skill-gaps"] as const,
+  progress: ["me", "skill-gaps", "progress"] as const,
+  report: (id: string) => ["me", "skill-gaps", "report", id] as const,
+};
+
+export function useGapProgress(options: { enabled?: boolean } = {}) {
+  return useQuery({ queryKey: gapKeys.progress, queryFn: skillGapsApi.progress, enabled: options.enabled ?? true });
+}
+
+export function useGapReport(id: string | null | undefined) {
+  return useQuery({
+    queryKey: gapKeys.report(id ?? ""),
+    queryFn: () => skillGapsApi.report(id!),
+    enabled: !!id,
+  });
+}
+
+export function useGenerateGapReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: skillGapsApi.generate,
+    onSuccess: (report) => {
+      qc.setQueryData(gapKeys.report(report.id), report);
+      void qc.invalidateQueries({ queryKey: gapKeys.progress });
+    },
+  });
+}
+
+export function useGenerateRoadmap(reportId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => skillGapsApi.roadmap(reportId),
+    onSuccess: (report) => {
+      qc.setQueryData(gapKeys.report(report.id), report);
+      void qc.invalidateQueries({ queryKey: gapKeys.progress });
+    },
   });
 }

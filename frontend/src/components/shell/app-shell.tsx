@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   LayoutDashboard,
   Sparkles,
+  Target,
   Menu,
   Settings,
   SlidersHorizontal,
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 export const CANDIDATE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/matches", label: "Recommendations", icon: Sparkles },
+  { href: "/skill-gaps", label: "Skill gaps", icon: Target },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/cv", label: "CV analysis", icon: FileText },
   { href: "/skills", label: "My skills", icon: BadgeCheck },

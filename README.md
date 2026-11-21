@@ -4,9 +4,10 @@ AI-powered career guidance for university students, fresh graduates and entry-le
 It analyzes CVs, extracts skills, recommends entry-level IT jobs with deterministic compatibility
 scores, and explains skill gaps.
 
-> **Status:** Milestones 1-5 are complete. Candidates can register, onboard, analyze their CV and
-> confirm skills, search jobs, and get personalized recommendations with transparent, deterministic
-> compatibility scores and grounded explanations. Admins manage job listings. See
+> **Status:** Milestones 1-6 are complete. Candidates can register, onboard, analyze their CV and
+> confirm skills, search jobs, get personalized recommendations with transparent, deterministic
+> compatibility scores and grounded explanations, and see their skill gaps with a validated learning
+> roadmap and progress over time. Admins manage job listings. See
 > [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
@@ -44,6 +45,7 @@ backend/        Spring Boot app (Maven wrapper; no global Maven needed)
     cv/         CV upload, async analysis worker, history, confirmation, deletion
     job/        job listings: search/filter/pagination, admin CRUD, demo dataset seeder
     matching/   deterministic scoring engine (engine/), versioned results, explanations
+    gap/        skill gap analysis (engine/), stored reports, learning roadmaps, progress
     storage/    S3 client with AES-256-GCM client-side encryption
     aiclient/   typed client + health indicator for the AI service
   src/main/resources/db/migration/   Flyway migrations (V{n}__{description}.sql)
@@ -170,6 +172,10 @@ array, `INVALID_CREDENTIALS`, `EMAIL_ALREADY_REGISTERED`, `ONBOARDING_INCOMPLETE
 | GET | `/api/v1/me/matches` | candidate | Recommendations, best first (`origin`, `page`, `size` ≤ 50) with data-completeness flags |
 | GET | `/api/v1/me/matches/{jobId}` | candidate | Full breakdown for one published job (plus cached explanation) |
 | POST | `/api/v1/me/matches/{jobId}/explanation` | candidate | Generate or return the grounded explanation of the current result |
+| POST | `/api/v1/me/skill-gaps` | candidate | Analyze my top matches and store a new skill gap report |
+| GET | `/api/v1/me/skill-gaps` | candidate | Progress across my reports |
+| GET | `/api/v1/me/skill-gaps/latest` · `/{id}` | candidate | A report with gaps, resources, strengths and roadmap |
+| POST | `/api/v1/me/skill-gaps/{id}/roadmap` | candidate | Generate (once) and return the validated learning roadmap |
 | DELETE | `/api/v1/me/skills/{skillId}` | bearer | Remove a skill from my profile |
 
 ## Jobs
@@ -245,6 +251,42 @@ is allowed), or links or markup. Valid explanations are cached per result versio
 **Authorization.** Matching endpoints are under `/api/v1/me/matches/**` and require the CANDIDATE
 role. Results are computed for and stored against the authenticated user only, and only for
 published, unexpired jobs.
+
+## Skill gap analysis
+
+`POST /api/v1/me/skill-gaps` analyzes the candidate's **10 best matches** (from `match-v1`) with a
+deterministic analyzer (`gap/engine/GapAnalyzer`, **`gap-v1`**) and stores the result as a report.
+
+- **Gaps** are the required and preferred skills of those jobs that the candidate hasn't confirmed.
+- **Priority:** *critical* if required by at least max(2, 30% of the target jobs), *high* if required
+  by any, *medium* if preferred by two or more, *low* otherwise.
+- **Why it matters is measured, not asserted:** each gap shows how many target jobs require or prefer
+  it and its **average score gain**: the matching engine re-scores every target job as if the
+  candidate had the skill.
+- **Resources** come from `skill_resources` (V8): free, official documentation and courses for 48
+  skills. Every URL was checked to resolve when it was added. The AI never supplies links.
+
+**Learning roadmap.** `POST /api/v1/me/skill-gaps/{id}/roadmap` sends the AI service the top 6 gaps
+(counts, gains, two example job titles), the candidate's existing skill names, and the ids and titles
+of curated resources. No CV text, personal data or URLs are sent. Claude (or, in `local` mode, a
+deterministic template labelled "no AI") returns at most 6 steps. Both services reject a roadmap that:
+
+- adds a step for a skill that isn't a gap, or repeats one;
+- references a resource that doesn't exist or belongs to another skill;
+- cites a number that isn't in the facts (apart from the step's own week estimate);
+- contains links or markup;
+- **claims an outcome or qualification**, such as guaranteed results, getting hired, job offers,
+  "makes you qualified/job-ready" or "you are certified".
+
+The AI service retries once. Rejected roadmaps are never stored or shown. A valid roadmap is stored
+on its report, so it is generated once per report. Rate limits: 20 reports and 10 roadmaps per user
+per hour.
+
+**Progress.** Reports are snapshots, so history is kept. `GET /api/v1/me/skill-gaps` returns each
+report's required-skill coverage, average top-match score and gap counts, plus which important gaps
+from the first report have since been confirmed. Gaps and roadmap steps show as done as soon as the
+candidate confirms the skill. All endpoints require the CANDIDATE role and only return the caller's
+own reports.
 
 ## CV analysis pipeline
 
@@ -363,6 +405,8 @@ required secret is missing.
 | `JOBS_DEMO_DATA_ENABLED` | backend | Load the labelled demo job dataset (default `false`) |
 | `MATCH_WEIGHT_SKILLS` … `MATCH_WEIGHT_PREFERENCES` | backend | Matching weights (defaults 0.45/0.20/0.15/0.10/0.10; must sum to 1) |
 | `RATE_LIMIT_EXPLANATIONS_PER_HOUR` | backend | Explanation requests per user (default 30) |
+| `RATE_LIMIT_GAP_REPORTS_PER_HOUR` | backend | Skill gap analyses per user (default 20) |
+| `RATE_LIMIT_ROADMAPS_PER_HOUR` | backend | Learning roadmap generations per user (default 10) |
 | `CORS_ALLOWED_ORIGINS` | backend | Comma-separated browser origins |
 | `OPENAPI_ENABLED` | backend | Toggle Swagger UI / OpenAPI |
 | `AI_DOCS_ENABLED` | ai-service | Toggle FastAPI docs |

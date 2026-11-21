@@ -346,3 +346,88 @@ export interface MatchDetail {
   candidateData: CandidateDataStatus;
   explanation: MatchExplanation | null;
 }
+
+// ---- Skill gaps ----
+
+export type GapPriority = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+
+export interface LearningResource {
+  id: string;
+  title: string;
+  provider: string;
+  type: "DOCUMENTATION" | "TUTORIAL" | "COURSE";
+  url: string;
+  verifiedOn: string;
+}
+
+export interface GapJobRef {
+  jobId: string;
+  title: string;
+  company: string;
+  dataOrigin: "REAL" | "DEMO";
+  score: number;
+}
+
+export interface SkillGap {
+  skillId: string;
+  name: string;
+  category: string;
+  priority: GapPriority;
+  requiredIn: number;
+  preferredIn: number;
+  averageGain: number;
+  jobs: GapJobRef[];
+  closed: boolean;
+  resources: LearningResource[];
+}
+
+export interface RoadmapStep {
+  skill: string;
+  title: string;
+  why: string;
+  activities: string[];
+  estimatedWeeks: number;
+  resources: LearningResource[];
+  done: boolean;
+}
+
+export interface Roadmap {
+  provider: string;
+  model: string;
+  summary: string;
+  steps: RoadmapStep[];
+  createdAt: string;
+}
+
+export interface GapReport {
+  id: string;
+  createdAt: string;
+  algorithmVersion: string;
+  matchAlgorithmVersion: string;
+  targetJobCount: number;
+  averageScore: number;
+  requiredCoverage: number;
+  targets: GapJobRef[];
+  gaps: SkillGap[];
+  strengths: { name: string; requiredIn: number }[];
+  roadmap: Roadmap | null;
+}
+
+export interface GapReportPoint {
+  id: string;
+  createdAt: string;
+  averageScore: number;
+  requiredCoverage: number;
+  criticalCount: number;
+  highCount: number;
+  gapCount: number;
+  hasRoadmap: boolean;
+}
+
+export interface GapProgress {
+  history: GapReportPoint[];
+  latestReportId: string | null;
+  closedSinceFirst: string[];
+  openFromFirst: string[];
+  confirmedSkillCount: number;
+}
