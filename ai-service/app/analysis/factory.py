@@ -8,4 +8,8 @@ def build_provider(settings: Settings) -> ExtractionProvider:
         from app.analysis.providers.anthropic_provider import AnthropicProvider
 
         return AnthropicProvider(settings)
+    if settings.provider == "ollama":
+        from app.analysis.providers.ollama_provider import OllamaProvider
+
+        return OllamaProvider(settings)
     return LocalProvider()

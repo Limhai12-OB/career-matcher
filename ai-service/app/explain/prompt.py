@@ -22,6 +22,20 @@ use an empty list when there is nothing to say).
 """
 
 
-def build_user_message(facts_json: str) -> str:
+def build_user_message(facts_json: str, feedback: list[str] | None = None) -> str:
     safe = facts_json.replace("</match_facts", "‹/match_facts")
-    return f"Explain this job match.\n\n<match_facts>\n{safe}\n</match_facts>"
+    return f"Explain this job match.\n\n<match_facts>\n{safe}\n</match_facts>" + feedback_note(
+        feedback
+    )
+
+
+def feedback_note(feedback: list[str] | None) -> str:
+    """Tells the model why its previous answer was rejected, so the one retry can fix it."""
+    if not feedback:
+        return ""
+    reasons = "\n".join(f"- {r[:200]}" for r in feedback[:10])
+    return (
+        "\n\nYour previous answer was rejected by an automatic check for these reasons:\n"
+        f"{reasons}\n"
+        "Write a new answer that fixes every one of them and still follows all the rules."
+    )

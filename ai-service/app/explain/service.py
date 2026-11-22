@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 class ExplanationProvider(Protocol):
     name: str
 
-    async def explain(self, facts: MatchFacts) -> tuple[ExplanationOut, str]: ...
+    async def explain(
+        self, facts: MatchFacts, feedback: list[str] | None = None
+    ) -> tuple[ExplanationOut, str]: ...
 
 
 class TemplateExplainer:
@@ -27,7 +29,9 @@ class TemplateExplainer:
     name = "local"
     model = "template-v1"
 
-    async def explain(self, facts: MatchFacts) -> tuple[ExplanationOut, str]:
+    async def explain(
+        self, facts: MatchFacts, feedback: list[str] | None = None
+    ) -> tuple[ExplanationOut, str]:
         return template.build(facts), self.model
 
 
@@ -36,8 +40,9 @@ class ExplanationService:
         self.provider = provider
 
     async def explain(self, facts: MatchFacts) -> ExplanationResponse:
+        feedback: list[str] | None = None
         for attempt in (1, 2):
-            out, model = await self.provider.explain(facts)
+            out, model = await self.provider.explain(facts, feedback=feedback)
             problems = violations(facts, out)
             if not problems:
                 return ExplanationResponse(
@@ -50,6 +55,7 @@ class ExplanationService:
                     next_steps=out.next_steps,
                 )
             logger.warning("Ungrounded explanation (attempt %d): %s", attempt, problems)
+            feedback = problems
         raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "ungrounded explanation")
 
 

@@ -326,9 +326,10 @@ user reviews skills + evidence ─▶ confirms selected skills ─▶ candidate_
 | `AI_PROVIDER` | Behaviour |
 |---|---|
 | `anthropic` (production) | Claude (`AI_MODEL`, default `claude-opus-5-5`) via the official Anthropic SDK, with structured outputs (`output_format`) and server-side refusal fallbacks enabled (`AI_FALLBACKS_ENABLED`). Requires `ANTHROPIC_API_KEY`; the key exists only in the ai-service container. |
+| `ollama` (local development) | A model running on your own machine through [Ollama](https://ollama.com) (`OLLAMA_MODEL`, default `qwen2.5:7b`), with schema-constrained JSON output. No key, no data leaves the machine; slower and less accurate than Claude. Refused when `APP_ENV=production`. Setup: `ollama serve`, `ollama pull qwen2.5:7b`, set `AI_PROVIDER=ollama`, `docker compose up -d ai-service`. |
 | `local` (default for development) | Deterministic, offline rule-based extractor: skills from a fixed lexicon and education lines, each with the line it came from as evidence. Experience, projects and certifications are not extracted, and the UI says so ("Basic analysis"). No key, no network. |
 
-Both providers go through the same grounding and validation path.
+All providers go through the same grounding and validation path.
 
 ## Production deployment
 
@@ -419,7 +420,7 @@ required secret is missing.
 | `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_BUCKET` | storage, backend | Object storage credentials and bucket |
 | `CV_ENCRYPTION_KEY` | backend | Base64 AES-256 key for CV files (`openssl rand -base64 32`). **Back it up**: without it stored CVs can't be read. |
 | `RATE_LIMIT_CV_UPLOADS_PER_HOUR` | backend | Per-user upload/re-analysis limit (default 10) |
-| `AI_PROVIDER`, `ANTHROPIC_API_KEY`, `AI_MODEL`, `AI_EFFORT` | ai-service | LLM provider configuration (see "AI provider") |
+| `AI_PROVIDER`, `ANTHROPIC_API_KEY`, `AI_MODEL`, `AI_EFFORT`, `OLLAMA_MODEL`, `OLLAMA_BASE_URL` | ai-service | LLM provider configuration (see "AI provider") |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | backend | Bootstrap the first administrator (see "Administration") |
 | `JOBS_DEMO_DATA_ENABLED` | backend | Load the labelled demo job dataset (default `false`) |
 | `MATCH_WEIGHT_SKILLS` … `MATCH_WEIGHT_PREFERENCES` | backend | Matching weights (defaults 0.45/0.20/0.15/0.10/0.10; must sum to 1) |

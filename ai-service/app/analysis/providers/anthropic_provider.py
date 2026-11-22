@@ -55,12 +55,14 @@ class AnthropicProvider:
             raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "no parsed output")
         return ProviderResult(extraction=parsed, model=response.model)
 
-    async def explain(self, facts: MatchFacts) -> tuple[ExplanationOut, str]:
+    async def explain(
+        self, facts: MatchFacts, feedback: list[str] | None = None
+    ) -> tuple[ExplanationOut, str]:
         from app.explain.service import facts_json
 
         response = await self._parse(
             system=explain_prompt.SYSTEM_PROMPT,
-            user=explain_prompt.build_user_message(facts_json(facts)),
+            user=explain_prompt.build_user_message(facts_json(facts), feedback),
             output_format=ExplanationOut,
             effort="low",
         )
@@ -69,12 +71,14 @@ class AnthropicProvider:
             raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "no parsed output")
         return parsed, response.model
 
-    async def roadmap(self, facts: RoadmapFacts) -> tuple[RoadmapOut, str]:
+    async def roadmap(
+        self, facts: RoadmapFacts, feedback: list[str] | None = None
+    ) -> tuple[RoadmapOut, str]:
         from app.roadmap.service import facts_json
 
         response = await self._parse(
             system=roadmap_prompt.SYSTEM_PROMPT,
-            user=roadmap_prompt.build_user_message(facts_json(facts)),
+            user=roadmap_prompt.build_user_message(facts_json(facts), feedback),
             output_format=RoadmapOut,
             effort="low",
         )

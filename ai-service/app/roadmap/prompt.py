@@ -24,6 +24,20 @@ Learning a skill improves the estimate; it does not guarantee any outcome.
 """
 
 
-def build_user_message(facts_json: str) -> str:
+def build_user_message(facts_json: str, feedback: list[str] | None = None) -> str:
     safe = facts_json.replace("</gap_facts", "‹/gap_facts")
-    return f"Write the learning roadmap.\n\n<gap_facts>\n{safe}\n</gap_facts>"
+    return f"Write the learning roadmap.\n\n<gap_facts>\n{safe}\n</gap_facts>" + feedback_note(
+        feedback
+    )
+
+
+def feedback_note(feedback: list[str] | None) -> str:
+    """Tells the model why its previous answer was rejected, so the one retry can fix it."""
+    if not feedback:
+        return ""
+    reasons = "\n".join(f"- {r[:200]}" for r in feedback[:10])
+    return (
+        "\n\nYour previous answer was rejected by an automatic check for these reasons:\n"
+        f"{reasons}\n"
+        "Write a new answer that fixes every one of them and still follows all the rules."
+    )

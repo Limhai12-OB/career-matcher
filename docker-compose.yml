@@ -52,6 +52,12 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-claude-opus-5-5}
       AI_EFFORT: ${AI_EFFORT:-medium}
+      AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-120}
+      # AI_PROVIDER=ollama: a model served by Ollama running natively on the host (dev only).
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # Dev convenience only; loopback-bound. The production override removes this.
     ports:
       - "127.0.0.1:${AI_HOST_PORT:-8000}:8000"
@@ -75,6 +81,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       AI_SERVICE_URL: http://ai-service:8000
       AI_INTERNAL_TOKEN: ${AI_INTERNAL_TOKEN}
+      AI_ANALYSIS_TIMEOUT: ${AI_ANALYSIS_TIMEOUT:-180s}
       JWT_SECRET: ${JWT_SECRET:?set in .env}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       FORWARD_HEADERS_STRATEGY: ${FORWARD_HEADERS_STRATEGY:-none}

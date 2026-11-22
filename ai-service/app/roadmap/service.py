@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 class RoadmapProvider(Protocol):
     name: str
 
-    async def roadmap(self, facts: RoadmapFacts) -> tuple[RoadmapOut, str]: ...
+    async def roadmap(
+        self, facts: RoadmapFacts, feedback: list[str] | None = None
+    ) -> tuple[RoadmapOut, str]: ...
 
 
 class TemplateRoadmapper:
@@ -27,7 +29,9 @@ class TemplateRoadmapper:
     name = "local"
     model = "template-v1"
 
-    async def roadmap(self, facts: RoadmapFacts) -> tuple[RoadmapOut, str]:
+    async def roadmap(
+        self, facts: RoadmapFacts, feedback: list[str] | None = None
+    ) -> tuple[RoadmapOut, str]:
         return template.build(facts), self.model
 
 
@@ -36,8 +40,9 @@ class RoadmapService:
         self.provider = provider
 
     async def roadmap(self, facts: RoadmapFacts) -> RoadmapResponse:
+        feedback: list[str] | None = None
         for attempt in (1, 2):
-            out, model = await self.provider.roadmap(facts)
+            out, model = await self.provider.roadmap(facts, feedback=feedback)
             problems = violations(facts, out)
             if not problems:
                 return RoadmapResponse(
@@ -48,6 +53,7 @@ class RoadmapService:
                     steps=[StepResponse(**s.model_dump()) for s in out.steps],
                 )
             logger.warning("Rejected roadmap (attempt %d): %s", attempt, problems)
+            feedback = problems
         raise ProviderError(ProviderErrorCode.AI_INVALID_OUTPUT, "unsupported roadmap")
 
 

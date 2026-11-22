@@ -43,6 +43,7 @@ describe("formatting", () => {
   it("labels providers honestly", () => {
     expect(providerLabel("local", "rule-based-v1")).toMatch(/no AI/);
     expect(providerLabel("anthropic", "claude-opus-5-5")).toContain("claude-opus-5-5");
+    expect(providerLabel("ollama", "qwen2.5:7b")).toBe("Local AI analysis (qwen2.5:7b)");
   });
 
   it("groups skills by category in a fixed order and drops empty groups", () => {

@@ -168,8 +168,9 @@ class Scripted:
         self.outs = list(outs)
         self.calls = 0
 
-    async def roadmap(self, f):
+    async def roadmap(self, f, feedback=None):
         self.calls += 1
+        self.feedback = feedback
         return self.outs.pop(0), "m"
 
 
@@ -183,6 +184,22 @@ async def test_service_retries_once_then_fails():
     with pytest.raises(ProviderError) as e:
         await RoadmapService(Scripted(bad, bad)).roadmap(facts())
     assert e.value.code is ProviderErrorCode.AI_INVALID_OUTPUT
+
+
+async def test_retry_tells_the_model_why_its_answer_was_rejected():
+    bad = roadmap(summary="This plan guarantees you an internship soon.")
+    p = Scripted(bad, roadmap())
+    await RoadmapService(p).roadmap(facts())
+    assert p.feedback and any("guarantee" in r.lower() or "claim" in r.lower() for r in p.feedback)
+
+
+def test_feedback_is_appended_to_the_prompt_only_on_retry():
+    from app.roadmap.prompt import build_user_message
+
+    assert "rejected" not in build_user_message("{}")
+    msg = build_user_message("{}", ["unsupported number 12"])
+    assert "rejected" in msg and "- unsupported number 12" in msg
+    assert msg.index("</gap_facts>") < msg.index("unsupported number 12")
 
 
 def client(roadmapper=None) -> TestClient:

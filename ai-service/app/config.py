@@ -23,8 +23,9 @@ class Settings(BaseSettings):
 
     # ---- LLM provider ----
     # "anthropic": Claude via the Anthropic API (production).
+    # "ollama": a local model served by Ollama (development / offline testing; no key).
     # "local": deterministic rule-based extractor (skills + education only; no network, no key).
-    provider: Literal["anthropic", "local"] = Field(default="local", alias="AI_PROVIDER")
+    provider: Literal["anthropic", "ollama", "local"] = Field(default="local", alias="AI_PROVIDER")
     anthropic_api_key: SecretStr | None = Field(default=None, alias="ANTHROPIC_API_KEY")
     model: str = Field(default="claude-opus-5-5", alias="AI_MODEL")
     effort: Literal["low", "medium", "high"] = Field(default="medium", alias="AI_EFFORT")
@@ -32,6 +33,11 @@ class Settings(BaseSettings):
     max_retries: int = Field(default=2, alias="AI_MAX_RETRIES", ge=0, le=5)
     # Server-side refusal fallbacks (re-run on a fallback model if the primary declines).
     fallbacks_enabled: bool = Field(default=True, alias="AI_FALLBACKS_ENABLED")
+    # ---- Ollama (AI_PROVIDER=ollama) ----
+    ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
+    ollama_model: str = Field(default="qwen2.5:7b", alias="OLLAMA_MODEL")
+    ollama_num_ctx: int = Field(default=16384, alias="OLLAMA_NUM_CTX", ge=2048)
+    ollama_num_predict: int = Field(default=8192, alias="OLLAMA_NUM_PREDICT", ge=256)
     max_concurrent_analyses: int = Field(default=4, alias="AI_MAX_CONCURRENT", ge=1, le=64)
 
     # ---- Document limits ----
@@ -58,6 +64,8 @@ class Settings(BaseSettings):
             problems.append("AI_LOG_LEVEL must not be DEBUG")
         if self.provider == "anthropic" and not self.anthropic_api_key:
             problems.append("ANTHROPIC_API_KEY is required when AI_PROVIDER=anthropic")
+        if self.provider == "ollama":
+            problems.append("AI_PROVIDER=ollama is for local development only")
         if problems:
             raise ValueError("Unsafe production configuration: " + "; ".join(problems))
         return self

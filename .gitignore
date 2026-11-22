@@ -1,6 +1,4 @@
 # Secrets / local env
-.env
-.env.*
 !.env.example
 !.env.production.example
 !**/.env.example
@@ -8,7 +6,6 @@
 # OS / editors
 .DS_Store
 .idea/
-.vscode/
 *.iml
 
 # Python
@@ -20,3 +17,5 @@ __pycache__/
 
 # Local compose overrides
 docker-compose.override.yml
+config.bat
+node_modules

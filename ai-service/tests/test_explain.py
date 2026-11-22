@@ -134,8 +134,9 @@ class ScriptedExplainer:
         self.outs = list(outs)
         self.calls = 0
 
-    async def explain(self, f):
+    async def explain(self, f, feedback=None):
         self.calls += 1
+        self.feedback = feedback
         out = self.outs.pop(0) if len(self.outs) > 1 else self.outs[0]
         if isinstance(out, Exception):
             raise out

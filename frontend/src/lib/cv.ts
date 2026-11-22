@@ -99,6 +99,7 @@ export function groupByCategory<T extends { category: SkillCategory }>(items: T[
 
 export function providerLabel(provider: string | null, model: string | null): string {
   if (provider === "anthropic") return `AI analysis (${model ?? "Claude"})`;
+  if (provider === "ollama") return `Local AI analysis (${model ?? "Ollama"})`;
   if (provider === "local") return "Basic analysis (rule-based, no AI)";
   return provider ?? "Unknown";
 }
